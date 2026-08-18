@@ -3,25 +3,100 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-base: #16162a;
+  --bg-deep: #0d0d1a;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  scrollbar-color: #2a2a4f #0d0d1a;
+}
+
+html,
+body {
+  background-color: var(--bg-base);
+  color: #e8f1ff;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0, 212, 255, 0.10), transparent),
+    radial-gradient(ellipse 60% 40% at 90% 90%, rgba(59, 130, 246, 0.08), transparent);
+  min-height: 100vh;
+}
+
+@layer components {
+  /* Glassmorphism card with blue-glow border */
+  .hud-glass {
+    background: linear-gradient(180deg, rgba(29, 29, 61, 0.55), rgba(20, 20, 40, 0.45));
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 212, 255, 0.18);
+    box-shadow:
+      0 0 0 1px rgba(0, 212, 255, 0.04) inset,
+      0 8px 32px rgba(0, 0, 0, 0.35);
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+  }
+
+  .hud-glass:hover {
+    border-color: rgba(0, 212, 255, 0.4);
+    box-shadow:
+      0 0 0 1px rgba(0, 212, 255, 0.08) inset,
+      0 8px 32px rgba(0, 0, 0, 0.4),
+      0 0 32px rgba(0, 212, 255, 0.12);
+  }
+
+  .hud-label {
+    font-family: var(--font-mono);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-size: 0.68rem;
+    color: #8ca0c6;
+  }
+
+  .hud-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.35), transparent);
+  }
+
+  /* Faint circuit-style grid backdrop */
+  .hud-grid-bg {
+    background-image:
+      linear-gradient(rgba(0, 212, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 212, 255, 0.05) 1px, transparent 1px);
+    background-size: 42px 42px;
+  }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+@keyframes cta-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.035);
+    opacity: 0.92;
+  }
+}
+
+/* Custom scrollbar for the HUD aesthetic */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-deep);
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2a4f;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3b5a8a;
 }
