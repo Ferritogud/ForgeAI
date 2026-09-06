@@ -1,10 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { PROJECT_TEMPLATES } from "@/lib/templates";
+import {
+  EXPERIENCE_LEVELS,
+  GOAL_CATEGORIES,
+  GoalCategory,
+  GoalContext,
+  ExperienceLevel,
+  TIME_COMMITMENTS,
+  TimeCommitment,
+} from "@/lib/goalContext";
+import { detectCategory } from "@/lib/categoryDetection";
 import GlassCard from "./GlassCard";
 
 interface InputScreenProps {
-  onSubmit: (goal: string) => void;
+  onSubmit: (goal: string, deadline?: string, context?: GoalContext) => void;
+  onSelectTemplate: (templateId: string) => void;
+  error?: string | null;
 }
 
 const EXAMPLES = [
@@ -20,8 +33,19 @@ const CHIPS = [
   { label: "Thesis Sprint", text: EXAMPLES[2] },
 ];
 
-export default function InputScreen({ onSubmit }: InputScreenProps) {
+export default function InputScreen({ onSubmit, onSelectTemplate, error }: InputScreenProps) {
   const [value, setValue] = useState("");
+  const [deadline, setDeadline] = useState("");
+  const [category, setCategory] = useState<GoalCategory | null>(null);
+  // Tracks whether the current category came from auto-detection vs a manual
+  // click, purely for the "detected" visual treatment below — and whether
+  // the user has ever manually touched it, which permanently stops
+  // auto-detection from overriding their choice (task requires it never
+  // "lock" them into a guess, but it must equally never fight a real pick).
+  const [categoryIsAuto, setCategoryIsAuto] = useState(false);
+  const [categoryTouched, setCategoryTouched] = useState(false);
+  const [experienceLevel, setExperienceLevel] = useState<ExperienceLevel | null>(null);
+  const [timeCommitment, setTimeCommitment] = useState<TimeCommitment | null>(null);
   const [focused, setFocused] = useState(false);
   const [placeholderIdx, setPlaceholderIdx] = useState(0);
 
@@ -34,63 +58,58 @@ export default function InputScreen({ onSubmit }: InputScreenProps) {
     return () => clearInterval(id);
   }, [isEmpty]);
 
+  // Debounced client-side keyword guess — cheap enough to run on every pause
+  // in typing rather than needing an API call for something this low-stakes.
+  useEffect(() => {
+    if (categoryTouched) return;
+    const id = setTimeout(() => {
+      const guess = detectCategory(value);
+      if (guess) {
+        setCategory(guess);
+        setCategoryIsAuto(true);
+      }
+    }, 500);
+    return () => clearTimeout(id);
+  }, [value, categoryTouched]);
+
+  const selectCategory = (c: GoalCategory) => {
+    setCategoryTouched(true);
+    setCategoryIsAuto(false);
+    setCategory((prev) => (prev === c ? null : c));
+  };
+
   const handleSubmit = () => {
     if (!canSubmit) return;
-    onSubmit(value.trim());
+    onSubmit(value.trim(), deadline || undefined, { category, experienceLevel, timeCommitment });
   };
 
   return (
-    <main className="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden">
-      {/* Decorative radial arc behind the content */}
-      <svg
-        viewBox="0 0 640 640"
-        className="pointer-events-none absolute w-[640px] h-[640px] opacity-[0.12] animate-[spin_70s_linear_infinite]"
-        style={{ top: "50%", left: "50%", transform: "translate(-50%, -55%)" }}
-      >
-        <circle
-          cx="320"
-          cy="320"
-          r="300"
-          fill="none"
-          stroke="#00D4FF"
-          strokeWidth="1.5"
-          strokeDasharray="420 1500"
-          strokeLinecap="round"
-        />
-        <circle
-          cx="320"
-          cy="320"
-          r="260"
-          fill="none"
-          stroke="#3B82F6"
-          strokeWidth="1"
-          strokeDasharray="220 1200"
-          strokeLinecap="round"
-        />
-      </svg>
-
+    <main className="relative min-h-screen flex flex-col items-center justify-center px-6">
       <div className="relative z-10 w-full max-w-2xl flex flex-col items-center animate-fade-up">
         <div className="flex items-center gap-2 mb-4">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-glow opacity-75" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-glow animate-pulse-glow" />
-          </span>
-          <span className="hud-label text-blue-glow/80">System Online</span>
+          <span className="inline-flex h-2 w-2 rounded-full bg-accent" />
+          <span className="eyebrow">System Online</span>
         </div>
 
-        <h1 className="font-mono text-3xl sm:text-4xl font-medium tracking-tight text-ink-primary text-center mb-2">
-          FORGE<span className="text-blue-glow">AI</span>
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-ink-primary text-center mb-2">
+          Forge<span className="text-accent">AI</span>
         </h1>
         <p className="text-ink-secondary text-center mb-10 max-w-md">
           Turn any idea into an execution plan that adapts as you move — and tell you when you&apos;re
           falling behind.
         </p>
 
+        {error && (
+          <div className="w-full rounded-xl border border-warn/30 bg-warn-soft px-4 py-3 mb-4 text-sm text-warn leading-snug">
+            Couldn&apos;t reach the Anthropic API: {error} — check your key in Settings, or leave it blank to use demo data.
+          </div>
+        )}
+
         <GlassCard
-          className={`relative w-full p-1.5 transition-shadow duration-300 ${
-            focused ? "shadow-glow-blue-lg" : ""
+          data-tour="goal-input"
+          className={`relative w-full rounded-2xl p-1.5 transition-colors duration-300 ${
+            focused ? "border-accent" : ""
           }`}
-          style={{ borderColor: focused ? "rgba(0,212,255,0.55)" : undefined }}
         >
           <div className="relative">
             {isEmpty && (
@@ -109,6 +128,10 @@ export default function InputScreen({ onSubmit }: InputScreenProps) {
                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                   handleSubmit();
                 }
+                if (e.key === "Tab" && isEmpty) {
+                  e.preventDefault();
+                  setValue(EXAMPLES[placeholderIdx]);
+                }
               }}
               placeholder=""
               rows={4}
@@ -122,31 +145,144 @@ export default function InputScreen({ onSubmit }: InputScreenProps) {
             <button
               key={chip.label}
               onClick={() => setValue(chip.text)}
-              className="font-mono text-[0.7rem] uppercase tracking-widest px-3.5 py-1.5 rounded-full border border-blue-dim/60 text-ink-secondary
-                hover:border-blue-glow/50 hover:text-blue-glow hover:bg-blue-glow/5 transition-colors duration-200"
+              className="text-xs font-medium px-3.5 py-1.5 rounded-full border border-line text-ink-secondary
+                hover:border-accent hover:text-accent hover:bg-accent-soft transition-colors duration-200"
             >
               {chip.label}
             </button>
           ))}
         </div>
 
+        <GlassCard className="w-full rounded-2xl p-4 mt-5 flex flex-col gap-3.5">
+          <div className="flex flex-col gap-1.5">
+            <span className="eyebrow flex items-center gap-1.5">
+              Category <span className="text-ink-faint normal-case font-normal">(optional)</span>
+              {category && categoryIsAuto && (
+                <span className="text-accent normal-case font-normal">· detected, click to change</span>
+              )}
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {GOAL_CATEGORIES.map((c) => {
+                const selected = category === c;
+                const auto = selected && categoryIsAuto;
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => selectCategory(c)}
+                    className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors duration-200 ${
+                      auto
+                        ? "border-accent/40 border-dashed bg-accent-soft/60 text-accent"
+                        : selected
+                          ? "border-accent bg-accent-soft text-accent"
+                          : "border-line text-ink-secondary hover:border-accent hover:text-accent hover:bg-accent-soft"
+                    }`}
+                  >
+                    {c}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3.5 sm:gap-5">
+            <div className="flex flex-col gap-1.5 flex-1">
+              <span className="eyebrow">
+                Experience <span className="text-ink-faint normal-case font-normal">(optional)</span>
+              </span>
+              <div className="inline-flex items-center gap-1 p-1 rounded-xl border border-line bg-card-muted self-start w-full sm:w-auto">
+                {EXPERIENCE_LEVELS.map((level) => (
+                  <button
+                    key={level}
+                    type="button"
+                    onClick={() => setExperienceLevel((prev) => (prev === level ? null : level))}
+                    className={`flex-1 sm:flex-none px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
+                      experienceLevel === level
+                        ? "bg-card text-ink-primary shadow-sm"
+                        : "text-ink-secondary hover:text-ink-primary"
+                    }`}
+                  >
+                    {level}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1.5 flex-1">
+              <span className="eyebrow">
+                Time commitment <span className="text-ink-faint normal-case font-normal">(optional)</span>
+              </span>
+              <div className="inline-flex items-center gap-1 p-1 rounded-xl border border-line bg-card-muted self-start w-full sm:w-auto">
+                {TIME_COMMITMENTS.map((tc) => (
+                  <button
+                    key={tc}
+                    type="button"
+                    onClick={() => setTimeCommitment((prev) => (prev === tc ? null : tc))}
+                    className={`flex-1 sm:flex-none px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
+                      timeCommitment === tc
+                        ? "bg-card text-ink-primary shadow-sm"
+                        : "text-ink-secondary hover:text-ink-primary"
+                    }`}
+                  >
+                    {tc}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <label htmlFor="deadline" className="text-xs font-medium text-ink-secondary">
+              Deadline <span className="text-ink-faint">(optional)</span>
+            </label>
+            <input
+              id="deadline"
+              type="date"
+              value={deadline}
+              onChange={(e) => setDeadline(e.target.value)}
+              className="text-xs font-medium px-2.5 py-1 rounded-lg border border-line bg-transparent text-ink-secondary focus:outline-none focus:border-accent"
+            />
+          </div>
+        </GlassCard>
+
         <div className="flex items-center justify-between w-full mt-5 px-1">
-          <span className="hud-label text-ink-faint">⌘ + Enter to submit</span>
-          <span className="hud-label text-ink-faint">{value.length} / 500</span>
+          <span className="eyebrow">
+            {isEmpty ? "Tab to autofill · ⌘ + Enter to submit" : "⌘ + Enter to submit"}
+          </span>
+          <span className="eyebrow">{value.length} / 10000</span>
         </div>
 
         <button
           onClick={handleSubmit}
           disabled={!canSubmit}
-          className={`mt-8 group relative px-10 py-3.5 rounded-full font-mono text-sm tracking-widest uppercase
-            bg-amber text-white
-            disabled:bg-base-raised disabled:text-ink-faint disabled:cursor-not-allowed disabled:shadow-none
-            enabled:hover:shadow-glow-amber-lg enabled:hover:brightness-110
-            shadow-glow-amber transition-all duration-300
-            ${canSubmit ? "animate-[cta-pulse_2.4s_ease-in-out_infinite]" : ""}`}
+          className="mt-8 px-10 py-3.5 rounded-full text-sm font-semibold uppercase tracking-wide
+            bg-accent text-white
+            disabled:bg-card-muted disabled:text-ink-faint disabled:cursor-not-allowed
+            enabled:hover:brightness-110
+            transition-all duration-300"
         >
-          <span className="relative z-10">Generate Plan</span>
+          Generate Plan
         </button>
+
+        <div className="flex items-center gap-3 w-full mt-10 mb-5 max-w-md">
+          <div className="flex-1 h-px bg-line" />
+          <span className="eyebrow whitespace-nowrap">Or start from a template</span>
+          <div className="flex-1 h-px bg-line" />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
+          {PROJECT_TEMPLATES.map((template) => (
+            <button
+              key={template.id}
+              onClick={() => onSelectTemplate(template.id)}
+              className="flex flex-col items-start gap-2 p-4 rounded-2xl border border-line text-left hover:border-accent hover:bg-accent-soft transition-colors duration-200"
+            >
+              <span className="text-2xl">{template.icon}</span>
+              <span className="text-sm font-semibold text-ink-primary">{template.label}</span>
+              <span className="text-xs text-ink-faint leading-snug">{template.description}</span>
+            </button>
+          ))}
+        </div>
       </div>
     </main>
   );

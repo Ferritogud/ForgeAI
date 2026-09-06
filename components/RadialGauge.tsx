@@ -6,6 +6,7 @@ interface RadialGaugeProps {
   strokeWidth?: number;
   className?: string;
   trackClassName?: string;
+  strokeColor?: string;
   children?: React.ReactNode;
 }
 
@@ -15,6 +16,7 @@ export default function RadialGauge({
   strokeWidth = 3,
   className = "",
   trackClassName = "",
+  strokeColor = "var(--accent)",
   children,
 }: RadialGaugeProps) {
   const radius = (size - strokeWidth) / 2;
@@ -31,29 +33,20 @@ export default function RadialGauge({
           r={radius}
           fill="none"
           strokeWidth={strokeWidth}
-          className={trackClassName || "stroke-base-line"}
+          className={trackClassName || "stroke-line"}
         />
         <circle
           cx={size / 2}
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="url(#radial-gauge-gradient)"
+          stroke={strokeColor}
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={offset}
-          style={{
-            transition: "stroke-dashoffset 0.8s cubic-bezier(0.16, 1, 0.3, 1)",
-            filter: clamped > 0 ? "drop-shadow(0 0 3px rgba(0,212,255,0.7))" : undefined,
-          }}
+          style={{ transition: "stroke-dashoffset 0.8s cubic-bezier(0.16, 1, 0.3, 1)" }}
         />
-        <defs>
-          <linearGradient id="radial-gauge-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#3B82F6" />
-            <stop offset="100%" stopColor="#00D4FF" />
-          </linearGradient>
-        </defs>
       </svg>
       {children && (
         <div className="absolute inset-0 flex items-center justify-center">{children}</div>

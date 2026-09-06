@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Inter } from "next/font/google";
 import "./globals.css";
-import HudBackground from "@/components/HudBackground";
 
 const mono = JetBrains_Mono({
   subsets: ["latin"],
@@ -20,6 +19,16 @@ export const metadata: Metadata = {
   description: "Turn your idea into an execution plan that adapts on its own.",
 };
 
+const themeInitScript = `
+(function () {
+  try {
+    var stored = localStorage.getItem("forgeai_theme");
+    var dark = stored ? stored === "dark" : true;
+    if (dark) document.documentElement.classList.add("dark");
+  } catch (e) {}
+})();
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -27,9 +36,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${mono.variable} ${sans.variable}`}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className="font-sans antialiased relative min-h-screen overflow-x-hidden">
-        <HudBackground />
-        <div className="relative z-10">{children}</div>
+        {children}
       </body>
     </html>
   );

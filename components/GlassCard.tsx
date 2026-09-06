@@ -1,13 +1,18 @@
-import { HTMLAttributes } from "react";
+import { forwardRef, HTMLAttributes } from "react";
 
 interface GlassCardProps extends HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
 }
 
-export default function GlassCard({ children, className = "", ...props }: GlassCardProps) {
+const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(function GlassCard(
+  { children, className = "", ...props },
+  ref
+) {
   return (
-    <div className={`hud-glass rounded-2xl ${className}`} {...props}>
+    <div ref={ref} className={`card rounded-2xl ${className}`} {...props}>
       {children}
     </div>
   );
-}
+});
+
+export default GlassCard;
