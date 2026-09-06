@@ -33,18 +33,6 @@ function MicIcon({ active }: { active?: boolean }) {
     </svg>
   );
 }
-function SpeakerIcon({ muted }: { muted?: boolean }) {
-  return (
-    <svg viewBox="0 0 16 16" className="w-4 h-4" fill="none">
-      <path d="M2 6h2.5L8 3v10L4.5 10H2V6Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-      {muted ? (
-        <path d="M11 6.5 14 9.5M14 6.5 11 9.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-      ) : (
-        <path d="M11 5.5a4 4 0 0 1 0 5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-      )}
-    </svg>
-  );
-}
 function SparkleIcon() {
   return (
     <svg viewBox="0 0 16 16" className="w-4 h-4" fill="none">
@@ -81,7 +69,6 @@ export default function SoundboardPanel({ open, onClose, tier, usage, onRecordTo
   const [error, setError] = useState<string | null>(null);
   const [listening, setListening] = useState(false);
   const [voiceSupported, setVoiceSupported] = useState(false);
-  const [muted, setMuted] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
 
@@ -105,14 +92,6 @@ export default function SoundboardPanel({ open, onClose, tier, usage, onRecordTo
       (window as unknown as { webkitSpeechRecognition?: new () => SpeechRecognitionLike }).webkitSpeechRecognition;
     setVoiceSupported(!!SpeechRecognitionCtor);
   }, []);
-
-  const speak = (text: string) => {
-    if (muted || typeof window === "undefined" || !window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1.02;
-    window.speechSynthesis.speak(utterance);
-  };
 
   const toggleListening = () => {
     if (listening) {
@@ -166,7 +145,6 @@ export default function SoundboardPanel({ open, onClose, tier, usage, onRecordTo
 
       const reply = data.reply ?? "Something went wrong generating a reply.";
       setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
-      speak(reply);
 
       if (data.usage) onRecordTokens(data.usage.inputTokens + data.usage.outputTokens);
     } finally {
@@ -199,14 +177,6 @@ export default function SoundboardPanel({ open, onClose, tier, usage, onRecordTo
             </div>
           </div>
           <div className="flex items-center gap-1 shrink-0">
-            <button
-              onClick={() => setMuted((m) => !m)}
-              className="p-2 rounded-lg text-ink-secondary hover:text-accent hover:bg-accent-soft transition-colors"
-              aria-label={muted ? "Unmute spoken replies" : "Mute spoken replies"}
-              title={muted ? "Unmute spoken replies" : "Mute spoken replies"}
-            >
-              <SpeakerIcon muted={muted} />
-            </button>
             <button
               onClick={onClose}
               className="p-2 rounded-lg text-ink-secondary hover:text-accent hover:bg-accent-soft transition-colors"
