@@ -347,7 +347,7 @@ export default function AppShell() {
   // Whole app is gated behind mock sign-in (rather than leaving it reachable
   // via the sidebar) — the account menu (Part B) shows the signed-in user's
   // info, so there needs to always be one by the time the dashboard renders.
-  if (!auth.user) return <SignInScreen onSignIn={auth.signIn} />;
+  if (!auth.user) return <SignInScreen />;
 
   const highlightedId = effectiveMode === "input" ? null : activeProjectId;
   const sidebarOffset = collapsed ? "md:ml-[76px]" : "md:ml-[var(--sidebar-w)]";

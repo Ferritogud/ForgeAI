@@ -1,32 +1,32 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
+import { signOut as nextAuthSignOut, useSession } from "next-auth/react";
 import { MockUser } from "@/lib/types";
-import { loadMockUser, saveMockUser, clearMockUser } from "@/lib/storage";
 
 /**
- * Mock sign-in only — no real session, token, or backend. Signing out clears
- * just this local record, never the user's projects, so re-signing in (even
- * via a different mock provider) brings the same data back.
+ * Thin wrapper over next-auth/react's useSession — kept as its own hook (same
+ * shape as the old mock version: {user, ready, signOut}) so AppShell and
+ * Sidebar didn't need to change how they consume auth state. Actual sign-IN
+ * now happens inside SignInScreen itself via next-auth/react's signIn()
+ * directly (Google redirect flow, or the Credentials provider for email) —
+ * this hook only reflects whatever session already exists.
  */
 export function useAuth() {
-  const [user, setUser] = useState<MockUser | null>(null);
-  const [ready, setReady] = useState(false);
+  const { data: session, status } = useSession();
 
-  useEffect(() => {
-    setUser(loadMockUser());
-    setReady(true);
-  }, []);
-
-  const signIn = useCallback((next: MockUser) => {
-    setUser(next);
-    saveMockUser(next);
-  }, []);
+  const user: MockUser | null =
+    status === "authenticated" && session?.user
+      ? {
+          name: session.user.name ?? "User",
+          email: session.user.email ?? "",
+          provider: "email",
+        }
+      : null;
 
   const signOut = useCallback(() => {
-    setUser(null);
-    clearMockUser();
+    nextAuthSignOut({ redirect: false });
   }, []);
 
-  return { user, ready, signIn, signOut };
+  return { user, ready: status !== "loading", signOut };
 }
