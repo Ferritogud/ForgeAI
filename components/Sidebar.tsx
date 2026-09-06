@@ -101,6 +101,13 @@ function CalendarWeekIcon() {
     </svg>
   );
 }
+function SoundboardIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="w-4 h-4" fill="none">
+      <path d="M8 1.5 9.2 5.3 13 6.5l-3.8 1.2L8 11.5 6.8 7.7 3 6.5l3.8-1.2L8 1.5Z" fill="currentColor" />
+    </svg>
+  );
+}
 interface SidebarProps {
   projects: Project[];
   activeProjectId: string | null;
@@ -120,6 +127,7 @@ interface SidebarProps {
   onOpenActivity: () => void;
   onOpenBadges: () => void;
   onOpenDigest: () => void;
+  onOpenSoundboard: () => void;
   user: MockUser;
   tier: Tier;
   earnedBadges: EarnedBadge[];
@@ -145,6 +153,7 @@ export default function Sidebar({
   onOpenActivity,
   onOpenBadges,
   onOpenDigest,
+  onOpenSoundboard,
   user,
   tier,
   earnedBadges,
@@ -295,6 +304,21 @@ export default function Sidebar({
             >
               <PlusIcon />
               <span className={collapsed ? "md:hidden" : ""}>New Project</span>
+            </button>
+          </div>
+
+          {/* Idea Soundboard — a brainstorming/voice chat partner, deliberately not gated
+              behind any tier since it's meant to be a low-friction "just think out loud"
+              entry point for every user, not a paid upsell. */}
+          <div className="px-3 pb-1 shrink-0">
+            <button
+              onClick={onOpenSoundboard}
+              className={`w-full flex items-center gap-2.5 rounded-xl text-accent text-sm font-medium
+                hover:bg-accent-soft transition-colors duration-200
+                ${collapsed ? "md:justify-center md:px-0" : "px-3.5"} py-2`}
+            >
+              <SoundboardIcon />
+              <span className={collapsed ? "md:hidden" : ""}>Idea Soundboard</span>
             </button>
           </div>
 

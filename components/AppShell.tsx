@@ -23,6 +23,7 @@ import GeneratingScreen from "./GeneratingScreen";
 import Dashboard from "./Dashboard";
 import SettingsPanel from "./SettingsPanel";
 import ChatPanel from "./ChatPanel";
+import SoundboardPanel from "./SoundboardPanel";
 import UpsellModal from "./UpsellModal";
 import OnboardingTour, { ONBOARDING_STEPS, TourStep } from "./OnboardingTour";
 import CommandPalette from "./CommandPalette";
@@ -103,6 +104,7 @@ export default function AppShell() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsTab, setSettingsTab] = useState<SettingsTab>("general");
   const [chatOpen, setChatOpen] = useState(false);
+  const [soundboardOpen, setSoundboardOpen] = useState(false);
   const [upsellOpen, setUpsellOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [highlightMilestoneId, setHighlightMilestoneId] = useState<string | null>(null);
@@ -371,6 +373,7 @@ export default function AppShell() {
         onOpenActivity={() => setActivityOpen(true)}
         onOpenBadges={() => setBadgesOpen(true)}
         onOpenDigest={() => setDigestOpen(true)}
+        onOpenSoundboard={() => setSoundboardOpen(true)}
         user={auth.user}
         tier={tier}
         earnedBadges={badges.earned}
@@ -433,6 +436,18 @@ export default function AppShell() {
         onRecordTokens={recordTokens}
         onUpgrade={() => {
           setChatOpen(false);
+          openSettings("plan");
+        }}
+      />
+
+      <SoundboardPanel
+        open={soundboardOpen}
+        onClose={() => setSoundboardOpen(false)}
+        tier={tier}
+        usage={tokenUsage}
+        onRecordTokens={recordTokens}
+        onUpgrade={() => {
+          setSoundboardOpen(false);
           openSettings("plan");
         }}
       />
