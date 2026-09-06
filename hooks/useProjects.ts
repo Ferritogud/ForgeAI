@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useSession } from "next-auth/react";
 import { Attachment, ChatMessage, KanbanStatus, Milestone, Project, RawMilestone, Task, TrashEntry } from "@/lib/types";
 import {
   createProjectId,
@@ -47,6 +48,80 @@ export function useProjects() {
   useEffect(() => {
     if (ready) saveTrash(trash);
   }, [trash, ready]);
+
+  // --- Stage 2: sync projects/trash to the signed-in account -------------
+  // localStorage stays the immediate read/write target for every existing
+  // action below (so none of that logic changes) — this layer just also
+  // pulls the account's server copy down on sign-in (server wins once it
+  // has ever been written, so the same account's data follows you across
+  // devices) and pushes local changes back up afterward, debounced.
+  const { data: session, status: sessionStatus } = useSession();
+  const email = session?.user?.email ?? null;
+  const [synced, setSynced] = useState(false);
+  const pushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!ready) return;
+    if (sessionStatus !== "authenticated" || !email) {
+      setSynced(false);
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/user-data");
+        const body = await res.json();
+        if (cancelled) return;
+
+        if (body.data) {
+          // Server has a real synced copy (even if it's an empty list) —
+          // that's the source of truth once an account exists.
+          setProjects(body.data.projects ?? []);
+          setTrash(body.data.trash ?? []);
+        } else {
+          // First sign-in on this account, nothing synced yet — treat
+          // whatever is already in this browser as the initial upload.
+          await fetch("/api/user-data", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ projects, trash }),
+          });
+        }
+      } finally {
+        if (!cancelled) setSynced(true);
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // Deliberately only re-runs when sign-in state changes, not on every
+    // projects/trash edit — the effect below handles ongoing pushes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, sessionStatus, email]);
+
+  useEffect(() => {
+    if (!synced || sessionStatus !== "authenticated" || !email) return;
+
+    if (pushTimerRef.current) clearTimeout(pushTimerRef.current);
+    pushTimerRef.current = setTimeout(() => {
+      fetch("/api/user-data", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projects, trash }),
+      }).catch(() => {
+        // Best-effort — localStorage already has the authoritative local
+        // copy regardless, so a dropped sync request isn't data loss, just
+        // a missed cross-device update until the next successful save.
+      });
+    }, 1000);
+
+    return () => {
+      if (pushTimerRef.current) clearTimeout(pushTimerRef.current);
+    };
+  }, [projects, trash, synced, sessionStatus, email]);
 
   const addTrashEntry = useCallback((entry: Omit<TrashEntry, "id" | "deletedAt">) => {
     setTrash((prev) => [{ ...entry, id: makeTrashId(), deletedAt: new Date().toISOString() }, ...prev]);

@@ -98,3 +98,57 @@ export async function findOrCreateGoogleUser(name: string, email: string): Promi
   if (existing) return existing;
   return createUser(name, email, null);
 }
+
+// ---------------------------------------------------------------------------
+// Per-account project sync (Stage 2). Deliberately a single JSONB blob per
+// user rather than a fully normalized schema (separate milestones/tasks/
+// subtasks tables) — the existing app code (useProjects.ts and everything
+// downstream) already works entirely in terms of the Project[] shape from
+// lib/types.ts, so storing that shape directly server-side means the sync
+// layer is a thin read/write on top of unchanged app logic, instead of a
+// full rewrite of every hook into granular SQL. Scoped to `projects` and
+// `trash` only — theme, sidebar width, badges, tier, and token usage stay
+// per-browser/local, since those are device preferences, not "my work".
+// ---------------------------------------------------------------------------
+
+let userDataTableReady: Promise<void> | null = null;
+
+function ensureUserDataTable(): Promise<void> {
+  if (!userDataTableReady) {
+    userDataTableReady = getPool()
+      .query(
+        `CREATE TABLE IF NOT EXISTS user_data (
+          email TEXT PRIMARY KEY,
+          projects JSONB NOT NULL DEFAULT '[]'::jsonb,
+          trash JSONB NOT NULL DEFAULT '[]'::jsonb,
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        )`
+      )
+      .then(() => undefined);
+  }
+  return userDataTableReady;
+}
+
+export interface UserData {
+  projects: unknown[];
+  trash: unknown[];
+}
+
+/** Null means "no row yet" — distinct from an empty array, so callers can tell "never synced" apart from "synced, genuinely has zero projects." */
+export async function loadUserData(email: string): Promise<UserData | null> {
+  await ensureUserDataTable();
+  const result = await getPool().query<{ projects: unknown[]; trash: unknown[] }>(
+    "SELECT projects, trash FROM user_data WHERE email = $1",
+    [email.toLowerCase().trim()]
+  );
+  return result.rows[0] ?? null;
+}
+
+export async function saveUserData(email: string, projects: unknown[], trash: unknown[]): Promise<void> {
+  await ensureUserDataTable();
+  await getPool().query(
+    `INSERT INTO user_data (email, projects, trash, updated_at) VALUES ($1, $2, $3, now())
+     ON CONFLICT (email) DO UPDATE SET projects = $2, trash = $3, updated_at = now()`,
+    [email.toLowerCase().trim(), JSON.stringify(projects), JSON.stringify(trash)]
+  );
+}
