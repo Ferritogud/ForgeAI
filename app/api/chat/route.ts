@@ -4,6 +4,7 @@ import { generateMockChatReply } from "@/lib/chatGenerator";
 import { AI_MODEL } from "@/lib/ai";
 import { Project } from "@/lib/types";
 import { computeProjection } from "@/lib/projections";
+import { canUseServerKey, recordServerUsage, resolveApiKey } from "@/lib/serverKey";
 
 interface HistoryTurn {
   role: "user" | "assistant";
@@ -207,11 +208,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "project and message are required" }, { status: 400 });
   }
 
-  const key = typeof apiKey === "string" ? apiKey.trim() : "";
+  const { key, usesServerKey } = resolveApiKey(apiKey);
 
-  if (key) {
+  if (key && (!usesServerKey || canUseServerKey())) {
     try {
       const result = await generateWithClaude(project, message, history ?? [], key);
+      if (usesServerKey && result.usage) recordServerUsage(result.usage.inputTokens + result.usage.outputTokens);
       return NextResponse.json(result);
     } catch (err) {
       const messageText = err instanceof Error ? err.message : "The Anthropic API request failed.";

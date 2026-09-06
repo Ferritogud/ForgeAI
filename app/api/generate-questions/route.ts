@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { AI_MODEL } from "@/lib/ai";
 import { generateMockQuestions } from "@/lib/questions";
 import { describeGoalContext, GoalContext, hasGoalContext } from "@/lib/goalContext";
+import { canUseServerKey, recordServerUsage, resolveApiKey } from "@/lib/serverKey";
 
 function parseQuestionsJson(text: string): string[] {
   const cleaned = text
@@ -71,12 +72,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "goal is required" }, { status: 400 });
   }
 
-  const key = typeof apiKey === "string" ? apiKey.trim() : "";
+  const { key, usesServerKey } = resolveApiKey(apiKey);
   const goalContext: GoalContext | undefined = context ?? undefined;
 
-  if (key) {
+  if (key && (!usesServerKey || canUseServerKey())) {
     try {
       const result = await generateWithClaude(goal, key, goalContext);
+      if (usesServerKey && result.usage) recordServerUsage(result.usage.inputTokens + result.usage.outputTokens);
       return NextResponse.json(result);
     } catch {
       // Question generation is a nice-to-have layer on top of the core

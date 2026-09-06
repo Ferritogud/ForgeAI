@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { AI_MODEL } from "@/lib/ai";
 import { generateMockTitle } from "@/lib/titles";
+import { canUseServerKey, recordServerUsage, resolveApiKey } from "@/lib/serverKey";
 
-async function generateWithClaude(goal: string, apiKey: string): Promise<string | null> {
+async function generateWithClaude(goal: string, apiKey: string): Promise<{ title: string | null; usage: { inputTokens: number; outputTokens: number } }> {
   const anthropic = new Anthropic({ apiKey });
 
   const message = await anthropic.messages.create({
@@ -27,7 +28,10 @@ Goal: "${goal}"`,
     .trim();
 
   const cleaned = text.replace(/^["']|["']$/g, "").replace(/\.$/, "").trim();
-  return cleaned || null;
+  return {
+    title: cleaned || null,
+    usage: { inputTokens: message.usage.input_tokens, outputTokens: message.usage.output_tokens },
+  };
 }
 
 export async function POST(req: NextRequest) {
@@ -37,11 +41,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "goal is required" }, { status: 400 });
   }
 
-  const key = typeof apiKey === "string" ? apiKey.trim() : "";
+  const { key, usesServerKey } = resolveApiKey(apiKey);
 
-  if (key) {
+  if (key && (!usesServerKey || canUseServerKey())) {
     try {
-      const title = await generateWithClaude(goal, key);
+      const { title, usage } = await generateWithClaude(goal, key);
+      if (usesServerKey) recordServerUsage(usage.inputTokens + usage.outputTokens);
       if (title) return NextResponse.json({ title });
     } catch {
       // Title generation is cosmetic, not a core feature like plan

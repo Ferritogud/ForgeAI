@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { generateMockRoadmap } from "@/lib/mockGenerator";
 import { AI_MODEL } from "@/lib/ai";
 import { describeGoalContext, estimatedHoursPerWeek, GoalContext, hasGoalContext } from "@/lib/goalContext";
+import { canUseServerKey, recordServerUsage, resolveApiKey } from "@/lib/serverKey";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -176,7 +177,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "goal is required" }, { status: 400 });
   }
 
-  const key = typeof apiKey === "string" ? apiKey.trim() : "";
+  const { key, usesServerKey } = resolveApiKey(apiKey);
   const qa: QuestionAnswer[] = Array.isArray(answers)
     ? answers.filter(
         (a): a is QuestionAnswer =>
@@ -186,9 +187,10 @@ export async function POST(req: NextRequest) {
   const goalContext: GoalContext | undefined = context ?? undefined;
   const resolvedDeadline: string | undefined = typeof deadline === "string" && deadline ? deadline : undefined;
 
-  if (key) {
+  if (key && (!usesServerKey || canUseServerKey())) {
     try {
       const roadmap = await generateWithClaude(goal, qa, key, goalContext, resolvedDeadline);
+      if (usesServerKey && roadmap.usage) recordServerUsage(roadmap.usage.inputTokens + roadmap.usage.outputTokens);
       return NextResponse.json(roadmap);
     } catch (err) {
       // A key was supplied and the real call was attempted — surface the

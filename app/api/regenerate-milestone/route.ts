@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { AI_MODEL } from "@/lib/ai";
 import { generateMockRoadmap } from "@/lib/mockGenerator";
+import { canUseServerKey, recordServerUsage, resolveApiKey } from "@/lib/serverKey";
 
 interface MilestoneSummary {
   title: string;
@@ -97,13 +98,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "milestones and a valid targetIndex are required" }, { status: 400 });
   }
 
-  const key = typeof apiKey === "string" ? apiKey.trim() : "";
+  const { key, usesServerKey } = resolveApiKey(apiKey);
   const feedbackText = typeof feedback === "string" ? feedback.trim() : "";
   const isEnrich = enrich === true;
 
-  if (key) {
+  if (key && (!usesServerKey || canUseServerKey())) {
     try {
       const result = await generateWithClaude(goal, milestones, targetIndex, feedbackText, isEnrich, key);
+      if (usesServerKey && result.usage) recordServerUsage(result.usage.inputTokens + result.usage.outputTokens);
       return NextResponse.json(result);
     } catch (err) {
       const message = err instanceof Error ? err.message : "The Anthropic API request failed.";

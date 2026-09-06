@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { AI_MODEL } from "@/lib/ai";
 import { generateMockSoundboardReply } from "@/lib/soundboardGenerator";
+import { canUseServerKey, recordServerUsage, resolveApiKey } from "@/lib/serverKey";
 
 interface HistoryTurn {
   role: "user" | "assistant";
@@ -52,14 +53,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "message is required" }, { status: 400 });
   }
 
-  const key = typeof apiKey === "string" ? apiKey.trim() : "";
+  const { key, usesServerKey } = resolveApiKey(apiKey);
   const turns: HistoryTurn[] = Array.isArray(history)
     ? history.filter((h): h is HistoryTurn => h && (h.role === "user" || h.role === "assistant") && typeof h.content === "string")
     : [];
 
-  if (key) {
+  if (key && (!usesServerKey || canUseServerKey())) {
     try {
       const result = await generateWithClaude(message, turns, key);
+      if (usesServerKey && result.usage) recordServerUsage(result.usage.inputTokens + result.usage.outputTokens);
       return NextResponse.json(result);
     } catch (err) {
       const messageText = err instanceof Error ? err.message : "The Anthropic API request failed.";

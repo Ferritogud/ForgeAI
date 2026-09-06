@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { AI_MODEL } from "@/lib/ai";
 import { generateMockTaskGuidance } from "@/lib/taskGuidance";
+import { canUseServerKey, recordServerUsage, resolveApiKey } from "@/lib/serverKey";
 
 /** Same defensive parsing pattern as generate-roadmap: strip stray code fences before parsing. */
 function parseGuidanceJson(text: string): { summary: string; steps: string[] } {
@@ -69,9 +70,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "taskText is required" }, { status: 400 });
   }
 
-  const key = typeof apiKey === "string" ? apiKey.trim() : "";
+  const { key, usesServerKey } = resolveApiKey(apiKey);
 
-  if (key) {
+  if (key && (!usesServerKey || canUseServerKey())) {
     try {
       const result = await generateWithClaude(
         typeof goal === "string" ? goal : "",
@@ -79,6 +80,7 @@ export async function POST(req: NextRequest) {
         taskText,
         key
       );
+      if (usesServerKey && result.usage) recordServerUsage(result.usage.inputTokens + result.usage.outputTokens);
       return NextResponse.json(result);
     } catch (err) {
       const message = err instanceof Error ? err.message : "The Anthropic API request failed.";
