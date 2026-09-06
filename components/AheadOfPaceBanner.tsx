@@ -37,10 +37,10 @@ export default function AheadOfPaceBanner({ report, onAccelerate, onEnrich, onDi
           <RocketIcon />
         </div>
         <div className="flex flex-col gap-1 min-w-0">
-          <span className="text-sm font-bold text-ink-primary">You're moving faster than planned</span>
+          <span className="text-sm font-bold text-ink-primary">You&apos;re moving faster than planned</span>
           <p className="text-sm text-ink-secondary leading-snug">
-            You've finished your last {report.streakCount} milestones an average of {days} day{days === 1 ? "" : "s"}{" "}
-            ahead of schedule. Want to pull your next milestone forward, or add more depth to what you're working on?
+            You&apos;ve finished your last {report.streakCount} milestones an average of {days} day{days === 1 ? "" : "s"}{" "}
+            ahead of schedule. Want to pull your next milestone forward, or add more depth to what you&apos;re working on?
           </p>
         </div>
       </div>
