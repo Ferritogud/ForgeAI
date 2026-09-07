@@ -468,14 +468,7 @@ export default function SettingsPanel({
                     <span className="text-xs font-medium text-ink-faint text-center py-2 border border-line rounded-xl">
                       Unlock with a code below
                     </span>
-                  ) : (
-                    <button
-                      onClick={() => onSetTier(t)}
-                      className="px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all text-ink-secondary border border-line hover:border-ink-faint"
-                    >
-                      Downgrade
-                    </button>
-                  )}
+                  ) : null}
                 </div>
               );
             })}
