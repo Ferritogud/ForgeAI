@@ -1,13 +1,9 @@
 import { Resend } from "resend";
 
-/**
- * Sender address: until tryforgeai.app is verified as a sending domain in
- * Resend, their sandbox only delivers to the address that owns the Resend
- * account — real users won't receive anything sent from onboarding@resend.dev.
- * Once the domain is verified, set EMAIL_FROM (e.g. "ForgeAI <noreply@tryforgeai.app>")
- * to switch over with no code change.
- */
-const DEFAULT_FROM = "ForgeAI <onboarding@resend.dev>";
+// tryforgeai.app is verified as a sending domain in Resend, so this can
+// deliver to any recipient — no more sandbox restriction to the Resend
+// account's own address. EMAIL_FROM env var can still override this if needed.
+const DEFAULT_FROM = "ForgeAI <noreply@tryforgeai.app>";
 
 function getClient(): Resend | null {
   const key = (process.env.RESEND_API_KEY ?? "").trim();
