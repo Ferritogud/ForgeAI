@@ -288,6 +288,18 @@ export default function SignInScreen() {
             </>
           )}
         </GlassCard>
+
+        <p className="text-xs text-ink-faint text-center mt-5">
+          By continuing, you agree to our{" "}
+          <a href="/terms" className="text-accent hover:brightness-110 transition-all underline underline-offset-2">
+            Terms
+          </a>{" "}
+          and{" "}
+          <a href="/privacy" className="text-accent hover:brightness-110 transition-all underline underline-offset-2">
+            Privacy Policy
+          </a>
+          .
+        </p>
       </div>
     </main>
   );

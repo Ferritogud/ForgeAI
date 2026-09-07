@@ -401,6 +401,19 @@ export default function SettingsPanel({
             )}
           </section>
 
+          <section className="flex flex-col gap-3">
+            <div className="divider" />
+            <p className="text-xs text-ink-faint text-center">
+              <a href="/terms" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors underline underline-offset-2">
+                Terms
+              </a>
+              {" · "}
+              <a href="/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors underline underline-offset-2">
+                Privacy Policy
+              </a>
+            </p>
+          </section>
+
           {/* Dev-only: simulate drift to demo recalibration without waiting real days */}
           {process.env.NODE_ENV !== "production" && activeProject && (
             <section className="flex flex-col gap-3">
