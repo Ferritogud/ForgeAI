@@ -21,9 +21,9 @@ const buckets = new Map<string, Bucket>();
 function pruneIfNeeded(windowMs: number) {
   if (buckets.size < 5000) return;
   const now = Date.now();
-  for (const [key, bucket] of buckets) {
+  buckets.forEach((bucket, key) => {
     if (now - bucket.windowStart > windowMs) buckets.delete(key);
-  }
+  });
 }
 
 /** Returns true if `key` has exceeded `limit` requests within `windowMs`. */
