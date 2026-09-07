@@ -25,14 +25,43 @@ function SpinnerIcon({ className = "" }: { className?: string }) {
 }
 
 export default function SignInScreen() {
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [loadingProvider, setLoadingProvider] = useState<"google" | "email" | null>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [forgotSent, setForgotSent] = useState(false);
 
   const busy = loadingProvider !== null;
+
+  const handleForgotSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (busy) return;
+
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      setError("Enter your email to continue.");
+      return;
+    }
+
+    setError("");
+    setLoadingProvider("email");
+    try {
+      await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: trimmedEmail }),
+      });
+      // Always show the same confirmation regardless of what the server
+      // found — the API itself never reveals whether the account exists.
+      setForgotSent(true);
+    } catch {
+      setError("Something went wrong — please try again.");
+    } finally {
+      setLoadingProvider(null);
+    }
+  };
 
   const handleGoogle = () => {
     if (busy) return;
@@ -112,84 +141,152 @@ export default function SignInScreen() {
         </div>
 
         <GlassCard className="rounded-2xl p-6">
-          <div className="flex flex-col gap-2.5">
-            <button
-              type="button"
-              onClick={handleGoogle}
-              disabled={busy}
-              className="flex items-center justify-center gap-3 w-full rounded-lg border border-[#dadce0] bg-white px-4 py-2.5 text-sm font-medium text-[#3c4043] shadow-sm hover:shadow-md transition-shadow disabled:opacity-60 disabled:cursor-not-allowed disabled:shadow-sm"
-            >
-              {loadingProvider === "google" ? <SpinnerIcon className="text-[#3c4043]" /> : <GoogleIcon />}
-              Continue with Google
-            </button>
-          </div>
+          {mode === "forgot" ? (
+            forgotSent ? (
+              <div className="flex flex-col gap-3">
+                <p className="text-sm text-ink-secondary leading-snug">
+                  If an account exists for <span className="text-ink-primary font-medium">{email.trim()}</span>, a
+                  reset link is on its way — check your inbox.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("signin");
+                    setForgotSent(false);
+                  }}
+                  className="text-sm font-medium text-accent hover:brightness-110 transition-all text-left"
+                >
+                  ← Back to sign in
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleForgotSubmit} className="flex flex-col gap-2.5">
+                <p className="text-sm text-ink-secondary leading-snug mb-1">
+                  Enter your email and we&apos;ll send you a link to reset your password.
+                </p>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email"
+                  autoComplete="email"
+                  className="w-full rounded-lg border border-line bg-transparent px-3.5 py-2.5 text-sm text-ink-primary placeholder:text-ink-faint focus:outline-none focus:border-accent transition-colors"
+                />
 
-          <div className="flex items-center gap-3 my-5">
-            <div className="flex-1 h-px bg-line" />
-            <span className="eyebrow">or</span>
-            <div className="flex-1 h-px bg-line" />
-          </div>
+                {error && <p className="text-xs text-warn">{error}</p>}
 
-          <div className="flex rounded-lg bg-card-muted p-1 mb-4">
-            <button
-              type="button"
-              onClick={() => setMode("signin")}
-              className={`flex-1 rounded-md py-1.5 text-xs font-medium transition-colors ${
-                mode === "signin" ? "bg-card text-ink-primary shadow-sm" : "text-ink-secondary hover:text-ink-primary"
-              }`}
-            >
-              Sign in
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode("signup")}
-              className={`flex-1 rounded-md py-1.5 text-xs font-medium transition-colors ${
-                mode === "signup" ? "bg-card text-ink-primary shadow-sm" : "text-ink-secondary hover:text-ink-primary"
-              }`}
-            >
-              Create account
-            </button>
-          </div>
+                <button
+                  type="submit"
+                  disabled={busy}
+                  className="mt-1 flex items-center justify-center gap-2 w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white enabled:hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {loadingProvider === "email" && <SpinnerIcon className="text-white" />}
+                  Send reset link
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode("signin")}
+                  className="text-sm font-medium text-ink-secondary hover:text-ink-primary transition-colors text-left"
+                >
+                  ← Back to sign in
+                </button>
+              </form>
+            )
+          ) : (
+            <>
+              <div className="flex flex-col gap-2.5">
+                <button
+                  type="button"
+                  onClick={handleGoogle}
+                  disabled={busy}
+                  className="flex items-center justify-center gap-3 w-full rounded-lg border border-[#dadce0] bg-white px-4 py-2.5 text-sm font-medium text-[#3c4043] shadow-sm hover:shadow-md transition-shadow disabled:opacity-60 disabled:cursor-not-allowed disabled:shadow-sm"
+                >
+                  {loadingProvider === "google" ? <SpinnerIcon className="text-[#3c4043]" /> : <GoogleIcon />}
+                  Continue with Google
+                </button>
+              </div>
 
-          <form onSubmit={handleEmailSubmit} className="flex flex-col gap-2.5">
-            {mode === "signup" && (
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Name (optional)"
-                autoComplete="name"
-                className="w-full rounded-lg border border-line bg-transparent px-3.5 py-2.5 text-sm text-ink-primary placeholder:text-ink-faint focus:outline-none focus:border-accent transition-colors"
-              />
-            )}
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email"
-              autoComplete="email"
-              className="w-full rounded-lg border border-line bg-transparent px-3.5 py-2.5 text-sm text-ink-primary placeholder:text-ink-faint focus:outline-none focus:border-accent transition-colors"
-            />
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password"
-              autoComplete={mode === "signin" ? "current-password" : "new-password"}
-              className="w-full rounded-lg border border-line bg-transparent px-3.5 py-2.5 text-sm text-ink-primary placeholder:text-ink-faint focus:outline-none focus:border-accent transition-colors"
-            />
+              <div className="flex items-center gap-3 my-5">
+                <div className="flex-1 h-px bg-line" />
+                <span className="eyebrow">or</span>
+                <div className="flex-1 h-px bg-line" />
+              </div>
 
-            {error && <p className="text-xs text-warn">{error}</p>}
+              <div className="flex rounded-lg bg-card-muted p-1 mb-4">
+                <button
+                  type="button"
+                  onClick={() => setMode("signin")}
+                  className={`flex-1 rounded-md py-1.5 text-xs font-medium transition-colors ${
+                    mode === "signin" ? "bg-card text-ink-primary shadow-sm" : "text-ink-secondary hover:text-ink-primary"
+                  }`}
+                >
+                  Sign in
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode("signup")}
+                  className={`flex-1 rounded-md py-1.5 text-xs font-medium transition-colors ${
+                    mode === "signup" ? "bg-card text-ink-primary shadow-sm" : "text-ink-secondary hover:text-ink-primary"
+                  }`}
+                >
+                  Create account
+                </button>
+              </div>
 
-            <button
-              type="submit"
-              disabled={busy}
-              className="mt-1 flex items-center justify-center gap-2 w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white enabled:hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {loadingProvider === "email" && <SpinnerIcon className="text-white" />}
-              {mode === "signin" ? "Sign in" : "Create account"}
-            </button>
-          </form>
+              <form onSubmit={handleEmailSubmit} className="flex flex-col gap-2.5">
+                {mode === "signup" && (
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Name (optional)"
+                    autoComplete="name"
+                    className="w-full rounded-lg border border-line bg-transparent px-3.5 py-2.5 text-sm text-ink-primary placeholder:text-ink-faint focus:outline-none focus:border-accent transition-colors"
+                  />
+                )}
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email"
+                  autoComplete="email"
+                  className="w-full rounded-lg border border-line bg-transparent px-3.5 py-2.5 text-sm text-ink-primary placeholder:text-ink-faint focus:outline-none focus:border-accent transition-colors"
+                />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Password"
+                  autoComplete={mode === "signin" ? "current-password" : "new-password"}
+                  className="w-full rounded-lg border border-line bg-transparent px-3.5 py-2.5 text-sm text-ink-primary placeholder:text-ink-faint focus:outline-none focus:border-accent transition-colors"
+                />
+
+                {mode === "signin" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode("forgot");
+                      setError("");
+                    }}
+                    className="text-xs font-medium text-ink-faint hover:text-accent transition-colors text-left -mt-1"
+                  >
+                    Forgot password?
+                  </button>
+                )}
+
+                {error && <p className="text-xs text-warn">{error}</p>}
+
+                <button
+                  type="submit"
+                  disabled={busy}
+                  className="mt-1 flex items-center justify-center gap-2 w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white enabled:hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {loadingProvider === "email" && <SpinnerIcon className="text-white" />}
+                  {mode === "signin" ? "Sign in" : "Create account"}
+                </button>
+              </form>
+            </>
+          )}
         </GlassCard>
       </div>
     </main>

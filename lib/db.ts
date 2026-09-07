@@ -99,6 +99,65 @@ export async function findOrCreateGoogleUser(name: string, email: string): Promi
   return createUser(name, email, null);
 }
 
+export async function updateUserPassword(email: string, passwordHash: string): Promise<void> {
+  await ensureUsersTable();
+  await getPool().query("UPDATE users SET password_hash = $1 WHERE email = $2", [
+    passwordHash,
+    email.toLowerCase().trim(),
+  ]);
+}
+
+// ---------------------------------------------------------------------------
+// Password reset tokens — a single active token per email (a new request
+// overwrites the old one rather than accumulating rows), expiring after 1
+// hour. The token itself is the primary key, so lookup is a straight index
+// hit rather than a scan.
+// ---------------------------------------------------------------------------
+
+let passwordResetsTableReady: Promise<void> | null = null;
+
+function ensurePasswordResetsTable(): Promise<void> {
+  if (!passwordResetsTableReady) {
+    passwordResetsTableReady = getPool()
+      .query(
+        `CREATE TABLE IF NOT EXISTS password_resets (
+          email TEXT PRIMARY KEY,
+          token TEXT UNIQUE NOT NULL,
+          expires_at TIMESTAMPTZ NOT NULL
+        )`
+      )
+      .then(() => undefined);
+  }
+  return passwordResetsTableReady;
+}
+
+const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
+
+export async function createPasswordResetToken(email: string): Promise<string> {
+  await ensurePasswordResetsTable();
+  const token = randomUUID();
+  const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MS);
+  await getPool().query(
+    `INSERT INTO password_resets (email, token, expires_at) VALUES ($1, $2, $3)
+     ON CONFLICT (email) DO UPDATE SET token = $2, expires_at = $3`,
+    [email.toLowerCase().trim(), token, expiresAt]
+  );
+  return token;
+}
+
+/** Returns the email the token was issued for, or null if the token is unknown/expired. Single-use: consumes (deletes) the row on success. */
+export async function consumePasswordResetToken(token: string): Promise<string | null> {
+  await ensurePasswordResetsTable();
+  const result = await getPool().query<{ email: string; expires_at: string }>(
+    "DELETE FROM password_resets WHERE token = $1 RETURNING email, expires_at",
+    [token]
+  );
+  const row = result.rows[0];
+  if (!row) return null;
+  if (new Date(row.expires_at).getTime() < Date.now()) return null;
+  return row.email;
+}
+
 // ---------------------------------------------------------------------------
 // Per-account project sync (Stage 2). Deliberately a single JSONB blob per
 // user rather than a fully normalized schema (separate milestones/tasks/
