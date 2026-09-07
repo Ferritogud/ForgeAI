@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Tier } from "@/lib/types";
+import { getClientIp, isRateLimited } from "@/lib/rateLimit";
 
 /**
  * Codes live in a single JSON env var so new ones can be handed out (or
@@ -25,6 +26,10 @@ function loadCodeMap(): Record<string, Tier> {
 }
 
 export async function POST(req: NextRequest) {
+  if (isRateLimited(`redeem-code:${getClientIp(req)}`, 10, 15 * 60 * 1000)) {
+    return NextResponse.json({ error: "Too many attempts — try again later." }, { status: 429 });
+  }
+
   const { code } = await req.json();
   if (!code || typeof code !== "string" || !code.trim()) {
     return NextResponse.json({ error: "Enter a code." }, { status: 400 });

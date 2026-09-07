@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createPasswordResetToken, findUserByEmail } from "@/lib/db";
 import { sendPasswordResetEmail } from "@/lib/email";
+import { getClientIp, isRateLimited } from "@/lib/rateLimit";
 
 export async function POST(req: NextRequest) {
+  if (isRateLimited(`forgot-password:${getClientIp(req)}`, 5, 60 * 60 * 1000)) {
+    return NextResponse.json({ error: "Too many attempts — try again later." }, { status: 429 });
+  }
+
   const { email } = await req.json();
 
   if (typeof email !== "string" || !email.trim()) {

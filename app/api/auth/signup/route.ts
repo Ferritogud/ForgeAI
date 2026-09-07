@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { createUser, findUserByEmail } from "@/lib/db";
+import { getClientIp, isRateLimited } from "@/lib/rateLimit";
 
 export async function POST(req: NextRequest) {
+  if (isRateLimited(`signup:${getClientIp(req)}`, 5, 60 * 60 * 1000)) {
+    return NextResponse.json({ error: "Too many attempts — try again later." }, { status: 429 });
+  }
+
   const { name, email, password } = await req.json();
 
   if (typeof email !== "string" || !email.trim() || typeof password !== "string" || password.length < 6) {

@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
 import { findOrCreateGoogleUser, findUserByEmail } from "./db";
+import { isRateLimited } from "./rateLimit";
 
 /**
  * JWT session strategy — no NextAuth database adapter, no accounts/sessions
@@ -26,8 +27,17 @@ export const authOptions: AuthOptions = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.email || !credentials.password) return null;
+
+        // Keyed by IP + the email being attempted, so one person mistyping
+        // their own password a few times doesn't get blocked by an attacker
+        // hammering a different account from the same NAT/office IP.
+        const forwardedFor = (req?.headers as Record<string, string> | undefined)?.["x-forwarded-for"];
+        const ip = forwardedFor?.split(",")[0]?.trim() || "unknown";
+        if (isRateLimited(`login:${ip}:${credentials.email.toLowerCase().trim()}`, 10, 15 * 60 * 1000)) {
+          throw new Error("Too many attempts — try again in a few minutes.");
+        }
 
         const user = await findUserByEmail(credentials.email);
         if (!user || !user.password_hash) return null;

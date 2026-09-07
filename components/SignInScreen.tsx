@@ -113,7 +113,17 @@ export default function SignInScreen() {
       });
 
       if (result?.error) {
-        setError(mode === "signin" ? "Incorrect email or password." : "Account created, but sign-in failed — try signing in.");
+        // NextAuth passes a thrown authorize() error's message straight through
+        // (unlike the generic "CredentialsSignin" for a plain `return null`) —
+        // that's how the rate-limit message below reaches the user verbatim.
+        const isRateLimit = result.error.startsWith("Too many attempts");
+        setError(
+          isRateLimit
+            ? result.error
+            : mode === "signin"
+              ? "Incorrect email or password."
+              : "Account created, but sign-in failed — try signing in."
+        );
         setLoadingProvider(null);
       }
       // On success, useSession() picks up the new session and AppShell
