@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Droppable, Draggable, DraggableProvidedDragHandleProps } from "@hello-pangea/dnd";
 import { Milestone, MilestoneStatus, Task } from "@/lib/types";
-import { getApiKey } from "@/lib/ai";
 import { loadTaskGuidance, saveTaskGuidance } from "@/lib/storage";
 import { formatPhaseRange } from "@/lib/phases";
 import GlassCard from "./GlassCard";
@@ -210,7 +209,6 @@ export default function MilestoneCard({
           goal: projectGoal,
           milestoneTitle: milestone.title,
           taskText: task.text,
-          apiKey: getApiKey(),
         }),
       });
       const data = await res.json();
@@ -269,7 +267,6 @@ export default function MilestoneCard({
           milestones: siblingSummaries,
           targetIndex: index,
           feedback: regenerateFeedback.trim(),
-          apiKey: getApiKey(),
         }),
       });
       const data = await res.json();

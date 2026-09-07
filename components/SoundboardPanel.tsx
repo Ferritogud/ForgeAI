@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Tier, TokenUsage } from "@/lib/types";
-import { getApiKey } from "@/lib/ai";
 import { TOKEN_LIMITS, isTokenLimitReached } from "@/lib/tiers";
 import MarkdownText from "./MarkdownText";
 
@@ -74,8 +73,7 @@ export default function SoundboardPanel({ open, onClose, tier, usage, onRecordTo
 
   const limit = TOKEN_LIMITS[tier];
   const isUnlimited = limit === Infinity;
-  const overBudget = isTokenLimitReached(tier, usage.tokensUsed);
-  const limitReached = overBudget && !!getApiKey();
+  const limitReached = isTokenLimitReached(tier, usage.tokensUsed);
 
   useEffect(() => {
     if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
@@ -134,7 +132,7 @@ export default function SoundboardPanel({ open, onClose, tier, usage, onRecordTo
       const res = await fetch("/api/soundboard", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: content, history, apiKey: getApiKey() }),
+        body: JSON.stringify({ message: content, history }),
       });
       const data = await res.json();
 

@@ -202,18 +202,18 @@ async function generateWithClaude(
 }
 
 export async function POST(req: NextRequest) {
-  const { project, message, history, apiKey } = await req.json();
+  const { project, message, history } = await req.json();
 
   if (!project || typeof message !== "string" || !message.trim()) {
     return NextResponse.json({ error: "project and message are required" }, { status: 400 });
   }
 
-  const { key, usesServerKey } = resolveApiKey(apiKey);
+  const key = resolveApiKey();
 
-  if (key && (!usesServerKey || canUseServerKey())) {
+  if (key && canUseServerKey()) {
     try {
       const result = await generateWithClaude(project, message, history ?? [], key);
-      if (usesServerKey && result.usage) recordServerUsage(result.usage.inputTokens + result.usage.outputTokens);
+      if (result.usage) recordServerUsage(result.usage.inputTokens + result.usage.outputTokens);
       return NextResponse.json(result);
     } catch (err) {
       const messageText = err instanceof Error ? err.message : "The Anthropic API request failed.";

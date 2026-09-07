@@ -5,7 +5,6 @@ import { ensureMilestoneDateRanges } from "./phases";
 const PROJECTS_KEY = "forgeai_projects";
 const ACTIVE_ID_KEY = "forgeai_active_project_id";
 const LEGACY_KEY = "forgeai_plan";
-const API_KEY_KEY = "forgeai_api_key";
 const TIER_KEY = "forgeai_tier";
 const TOKEN_USAGE_KEY = "forgeai_token_usage";
 const VIEW_MODE_KEY = "forgeai_view_mode";
@@ -125,16 +124,6 @@ export function saveActiveProjectId(id: string | null) {
 
 export function createProjectId(): string {
   return makeId();
-}
-
-export function loadApiKey(): string {
-  return localStorage.getItem(API_KEY_KEY) ?? "";
-}
-
-export function saveApiKey(key: string) {
-  const trimmed = key.trim();
-  if (trimmed) localStorage.setItem(API_KEY_KEY, trimmed);
-  else localStorage.removeItem(API_KEY_KEY);
 }
 
 export function loadTier(): Tier {

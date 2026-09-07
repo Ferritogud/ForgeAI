@@ -89,7 +89,7 @@ the rest of this app's tasks.`,
 }
 
 export async function POST(req: NextRequest) {
-  const { goal, milestones, targetIndex, feedback, enrich, apiKey } = await req.json();
+  const { goal, milestones, targetIndex, feedback, enrich } = await req.json();
 
   if (!goal || typeof goal !== "string" || !goal.trim()) {
     return NextResponse.json({ error: "goal is required" }, { status: 400 });
@@ -98,14 +98,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "milestones and a valid targetIndex are required" }, { status: 400 });
   }
 
-  const { key, usesServerKey } = resolveApiKey(apiKey);
+  const key = resolveApiKey();
   const feedbackText = typeof feedback === "string" ? feedback.trim() : "";
   const isEnrich = enrich === true;
 
-  if (key && (!usesServerKey || canUseServerKey())) {
+  if (key && canUseServerKey()) {
     try {
       const result = await generateWithClaude(goal, milestones, targetIndex, feedbackText, isEnrich, key);
-      if (usesServerKey && result.usage) recordServerUsage(result.usage.inputTokens + result.usage.outputTokens);
+      if (result.usage) recordServerUsage(result.usage.inputTokens + result.usage.outputTokens);
       return NextResponse.json(result);
     } catch (err) {
       const message = err instanceof Error ? err.message : "The Anthropic API request failed.";

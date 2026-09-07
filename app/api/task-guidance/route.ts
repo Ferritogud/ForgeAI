@@ -64,15 +64,15 @@ number if it helps scannability, but don't overdo it.`,
 }
 
 export async function POST(req: NextRequest) {
-  const { goal, milestoneTitle, taskText, apiKey } = await req.json();
+  const { goal, milestoneTitle, taskText } = await req.json();
 
   if (!taskText || typeof taskText !== "string" || !taskText.trim()) {
     return NextResponse.json({ error: "taskText is required" }, { status: 400 });
   }
 
-  const { key, usesServerKey } = resolveApiKey(apiKey);
+  const key = resolveApiKey();
 
-  if (key && (!usesServerKey || canUseServerKey())) {
+  if (key && canUseServerKey()) {
     try {
       const result = await generateWithClaude(
         typeof goal === "string" ? goal : "",
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
         taskText,
         key
       );
-      if (usesServerKey && result.usage) recordServerUsage(result.usage.inputTokens + result.usage.outputTokens);
+      if (result.usage) recordServerUsage(result.usage.inputTokens + result.usage.outputTokens);
       return NextResponse.json(result);
     } catch (err) {
       const message = err instanceof Error ? err.message : "The Anthropic API request failed.";

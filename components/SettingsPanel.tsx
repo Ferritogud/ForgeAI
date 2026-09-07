@@ -4,7 +4,6 @@ import { ChangeEventHandler, useEffect, useRef, useState } from "react";
 import { Project, Tier, TrashEntry } from "@/lib/types";
 import { DEV_SIMULATE_DRIFT_DAYS } from "@/lib/recalibration";
 import { ThemeMode } from "@/lib/theme";
-import { loadApiKey, saveApiKey } from "@/lib/storage";
 import { TIER_INFO, TIER_ORDER } from "@/lib/tiers";
 import TrashPanel from "./TrashPanel";
 
@@ -12,29 +11,6 @@ function CloseIcon() {
   return (
     <svg viewBox="0 0 16 16" className="w-4 h-4" fill="none">
       <path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-    </svg>
-  );
-}
-function EyeIcon({ open }: { open: boolean }) {
-  return open ? (
-    <svg viewBox="0 0 16 16" className="w-4 h-4" fill="none">
-      <path
-        d="M1 8s2.5-4.5 7-4.5S15 8 15 8s-2.5 4.5-7 4.5S1 8 1 8Z"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinejoin="round"
-      />
-      <circle cx="8" cy="8" r="2" stroke="currentColor" strokeWidth="1.3" />
-    </svg>
-  ) : (
-    <svg viewBox="0 0 16 16" className="w-4 h-4" fill="none">
-      <path
-        d="M2 2l12 12M6.6 6.7A2 2 0 0 0 8 10a2 2 0 0 0 1.9-1.4M4.2 4.3C2.4 5.4 1 8 1 8s2.5 4.5 7 4.5c1.2 0 2.2-.3 3.1-.8M9.9 3.7c-.6-.1-1.2-.2-1.9-.2-.6 0-1.1.05-1.6.15M12.9 5.8c1.2 1 2.1 2.2 2.1 2.2s-.5.9-1.4 1.9"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
     </svg>
   );
 }
@@ -153,16 +129,16 @@ export default function SettingsPanel({
   onReplayTutorial,
 }: SettingsPanelProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
-  const [apiKey, setApiKey] = useState("");
-  const [showKey, setShowKey] = useState(false);
   const [clearConfirming, setClearConfirming] = useState(false);
   const [pendingImport, setPendingImport] = useState<Project[] | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
+  const [redeemCode, setRedeemCode] = useState("");
+  const [redeemStatus, setRedeemStatus] = useState<{ kind: "success" | "error"; message: string } | null>(null);
+  const [redeeming, setRedeeming] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (open) {
-      setApiKey(loadApiKey());
       setActiveTab(initialTab);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -173,13 +149,35 @@ export default function SettingsPanel({
       setClearConfirming(false);
       setPendingImport(null);
       setImportError(null);
-      setShowKey(false);
+      setRedeemCode("");
+      setRedeemStatus(null);
     }
   }, [open]);
 
-  const handleApiKeyChange = (value: string) => {
-    setApiKey(value);
-    saveApiKey(value);
+  const handleRedeemCode = async () => {
+    const code = redeemCode.trim();
+    if (!code || redeeming) return;
+    setRedeeming(true);
+    setRedeemStatus(null);
+    try {
+      const res = await fetch("/api/redeem-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      const data = await res.json();
+      if (data.error || !data.tier) {
+        setRedeemStatus({ kind: "error", message: data.error ?? "That code isn't valid." });
+        return;
+      }
+      onSetTier(data.tier as Tier);
+      setRedeemCode("");
+      setRedeemStatus({ kind: "success", message: `Unlocked ${TIER_INFO[data.tier as Tier].label}!` });
+    } catch {
+      setRedeemStatus({ kind: "error", message: "Something went wrong — please try again." });
+    } finally {
+      setRedeeming(false);
+    }
   };
 
   const handleExport = () => {
@@ -213,8 +211,6 @@ export default function SettingsPanel({
     };
     reader.readAsText(file);
   };
-
-  const hasKey = apiKey.trim().length > 0;
 
   return (
     <>
@@ -301,48 +297,6 @@ export default function SettingsPanel({
             >
               Replay tutorial
             </button>
-          </section>
-
-          {/* API Key */}
-          <section className="flex flex-col gap-3">
-            <div className="divider" />
-            <div className="flex items-center justify-between">
-              <span className="eyebrow">Anthropic API Key</span>
-              <span
-                className={`text-xs font-medium px-2 py-0.5 rounded-full border ${
-                  hasKey
-                    ? "border-accent/40 text-accent bg-accent-soft"
-                    : "border-line text-ink-faint"
-                }`}
-              >
-                {hasKey ? "Live API" : "Demo data"}
-              </span>
-            </div>
-
-            <div className="relative">
-              <input
-                type={showKey ? "text" : "password"}
-                value={apiKey}
-                onChange={(e) => handleApiKeyChange(e.target.value)}
-                placeholder="sk-ant-..."
-                spellCheck={false}
-                autoComplete="off"
-                className="w-full bg-card-muted border border-line rounded-xl pl-3.5 pr-10 py-2.5 text-sm text-ink-primary placeholder:text-ink-faint focus:outline-none focus:border-accent transition-colors font-mono"
-              />
-              <button
-                onClick={() => setShowKey((s) => !s)}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded text-ink-faint hover:text-accent transition-colors"
-                aria-label={showKey ? "Hide key" : "Show key"}
-                type="button"
-              >
-                <EyeIcon open={showKey} />
-              </button>
-            </div>
-
-            <p className="text-xs text-ink-faint leading-snug">
-              Optional — without a key, ForgeAI uses demo data. Stored only in this browser; sent
-              directly to Anthropic when generating a plan.
-            </p>
           </section>
 
           {/* Export / Import */}
@@ -510,25 +464,55 @@ export default function SettingsPanel({
                     <span className="text-xs font-medium text-accent text-center py-2 border border-accent/30 rounded-xl">
                       Current Plan
                     </span>
+                  ) : isUpgrade ? (
+                    <span className="text-xs font-medium text-ink-faint text-center py-2 border border-line rounded-xl">
+                      Unlock with a code below
+                    </span>
                   ) : (
                     <button
                       onClick={() => onSetTier(t)}
-                      className={`px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                        isUpgrade
-                          ? "text-white bg-accent hover:brightness-110"
-                          : "text-ink-secondary border border-line hover:border-ink-faint"
-                      }`}
+                      className="px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all text-ink-secondary border border-line hover:border-ink-faint"
                     >
-                      {isUpgrade ? "Upgrade" : "Downgrade"}
+                      Downgrade
                     </button>
                   )}
                 </div>
               );
             })}
 
-            <p className="text-xs text-ink-faint leading-snug text-center mt-1">
-              Demo only — no payment is processed. Plan changes take effect immediately.
-            </p>
+            <div className="flex flex-col gap-2.5 pt-1">
+              <div className="divider" />
+              <span className="eyebrow">Have a code?</span>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={redeemCode}
+                  onChange={(e) => setRedeemCode(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleRedeemCode();
+                  }}
+                  placeholder="Enter upgrade code"
+                  spellCheck={false}
+                  autoComplete="off"
+                  className="flex-1 bg-card-muted border border-line rounded-xl px-3.5 py-2.5 text-sm text-ink-primary placeholder:text-ink-faint focus:outline-none focus:border-accent transition-colors font-mono"
+                />
+                <button
+                  onClick={handleRedeemCode}
+                  disabled={!redeemCode.trim() || redeeming}
+                  className="px-4 py-2.5 rounded-xl text-sm font-medium text-white bg-accent hover:brightness-110 transition-all disabled:opacity-40 disabled:pointer-events-none"
+                >
+                  {redeeming ? "..." : "Redeem"}
+                </button>
+              </div>
+              {redeemStatus && (
+                <p className={`text-xs leading-snug ${redeemStatus.kind === "success" ? "text-accent" : "text-warn"}`}>
+                  {redeemStatus.message}
+                </p>
+              )}
+              <p className="text-xs text-ink-faint leading-snug text-center mt-1">
+                Upgrades unlock with an invite code — no self-serve payment yet.
+              </p>
+            </div>
           </div>
         )}
 

@@ -1,8 +1,7 @@
 /**
- * Resolves which Anthropic API key an API route should use, and enforces a
- * soft daily spend cap ONLY when it's the site's own shared key doing the
- * work — never when a visitor supplied their own key in Settings, since
- * that's their account/their money, not ours to ration.
+ * Every AI feature runs on the site's own shared Anthropic key — visitors
+ * never bring their own — so every call here is subject to the soft daily
+ * spend cap below.
  *
  * The cap is a defense-in-depth layer against a traffic spike or abuse
  * loop, not the primary guarantee — the real, reliable ceiling is the
@@ -47,17 +46,7 @@ export function recordServerUsage(tokens: number): void {
   tokensUsedInWindow += Math.max(0, tokens);
 }
 
-export interface ResolvedKey {
-  key: string;
-  /** True when this is the site's own ANTHROPIC_API_KEY env var, not something the visitor typed in — this is what the daily cap gates. */
-  usesServerKey: boolean;
-}
-
-/** A visitor-supplied key always wins (it's their account) — the server's shared key is only the fallback for visitors who never brought their own. */
-export function resolveApiKey(clientKey: string | null | undefined): ResolvedKey {
-  const trimmedClientKey = (clientKey ?? "").trim();
-  if (trimmedClientKey) return { key: trimmedClientKey, usesServerKey: false };
-
-  const serverKey = (process.env.ANTHROPIC_API_KEY ?? "").trim();
-  return { key: serverKey, usesServerKey: true };
+/** The site's shared Anthropic key — the only key any route ever uses. */
+export function resolveApiKey(): string {
+  return (process.env.ANTHROPIC_API_KEY ?? "").trim();
 }

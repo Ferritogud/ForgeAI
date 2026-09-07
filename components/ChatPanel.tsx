@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Attachment, ChatMessage, Project, Tier, TokenUsage } from "@/lib/types";
-import { getApiKey } from "@/lib/ai";
 import { TOKEN_LIMITS, isTokenLimitReached } from "@/lib/tiers";
 import { fileToAttachment } from "@/lib/attachments";
 import AttachmentList from "./AttachmentList";
@@ -73,12 +72,8 @@ export default function ChatPanel({
   const isUnlimited = limit === Infinity;
   const remaining = isUnlimited ? Infinity : Math.max(0, limit - usage.tokensUsed);
   const percentUsed = isUnlimited ? 0 : Math.min(100, (usage.tokensUsed / limit) * 100);
-  // Only actually blocks anything when there's a key configured — with no
-  // key every reply is free mock content, so a maxed-out budget from past
-  // real usage shouldn't lock someone out of mock chat.
-  const overBudget = isTokenLimitReached(tier, usage.tokensUsed);
-  const limitReached = overBudget && !!getApiKey();
-  const nearLimit = !isUnlimited && !overBudget && percentUsed >= 90;
+  const limitReached = isTokenLimitReached(tier, usage.tokensUsed);
+  const nearLimit = !isUnlimited && !limitReached && percentUsed >= 90;
 
   useEffect(() => {
     if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
@@ -139,7 +134,6 @@ export default function ChatPanel({
           },
           message: content,
           history,
-          apiKey: getApiKey(),
         }),
       });
       const data = await res.json();

@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { Attachment, Milestone, Project, ViewMode } from "@/lib/types";
 import { BoardColumn } from "@/hooks/useProjects";
 import { detectAheadOfPace, proposeAcceleration, proposeRecalibration, RE_PROMPT_COOLDOWN_DAYS } from "@/lib/recalibration";
-import { getApiKey } from "@/lib/ai";
 import ProgressBar from "./ProgressBar";
 import ChecklistView from "./ChecklistView";
 import ProjectionsPanel from "./ProjectionsPanel";
@@ -164,7 +163,6 @@ export default function Dashboard({
           milestones: project.milestones.map((m) => ({ title: m.title, taskTexts: m.tasks.map((t) => t.text) })),
           targetIndex: currentFocusIndex,
           enrich: true,
-          apiKey: getApiKey(),
         }),
       });
       const data = await res.json();

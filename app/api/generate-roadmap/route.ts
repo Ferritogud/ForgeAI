@@ -171,13 +171,13 @@ Goal: "${goal}"`,
 }
 
 export async function POST(req: NextRequest) {
-  const { goal, apiKey, answers, context, deadline } = await req.json();
+  const { goal, answers, context, deadline } = await req.json();
 
   if (!goal || typeof goal !== "string" || !goal.trim()) {
     return NextResponse.json({ error: "goal is required" }, { status: 400 });
   }
 
-  const { key, usesServerKey } = resolveApiKey(apiKey);
+  const key = resolveApiKey();
   const qa: QuestionAnswer[] = Array.isArray(answers)
     ? answers.filter(
         (a): a is QuestionAnswer =>
@@ -187,10 +187,10 @@ export async function POST(req: NextRequest) {
   const goalContext: GoalContext | undefined = context ?? undefined;
   const resolvedDeadline: string | undefined = typeof deadline === "string" && deadline ? deadline : undefined;
 
-  if (key && (!usesServerKey || canUseServerKey())) {
+  if (key && canUseServerKey()) {
     try {
       const roadmap = await generateWithClaude(goal, qa, key, goalContext, resolvedDeadline);
-      if (usesServerKey && roadmap.usage) recordServerUsage(roadmap.usage.inputTokens + roadmap.usage.outputTokens);
+      if (roadmap.usage) recordServerUsage(roadmap.usage.inputTokens + roadmap.usage.outputTokens);
       return NextResponse.json(roadmap);
     } catch (err) {
       // A key was supplied and the real call was attempted — surface the

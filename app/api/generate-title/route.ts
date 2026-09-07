@@ -35,18 +35,18 @@ Goal: "${goal}"`,
 }
 
 export async function POST(req: NextRequest) {
-  const { goal, apiKey } = await req.json();
+  const { goal } = await req.json();
 
   if (!goal || typeof goal !== "string" || !goal.trim()) {
     return NextResponse.json({ error: "goal is required" }, { status: 400 });
   }
 
-  const { key, usesServerKey } = resolveApiKey(apiKey);
+  const key = resolveApiKey();
 
-  if (key && (!usesServerKey || canUseServerKey())) {
+  if (key && canUseServerKey()) {
     try {
       const { title, usage } = await generateWithClaude(goal, key);
-      if (usesServerKey) recordServerUsage(usage.inputTokens + usage.outputTokens);
+      recordServerUsage(usage.inputTokens + usage.outputTokens);
       if (title) return NextResponse.json({ title });
     } catch {
       // Title generation is cosmetic, not a core feature like plan

@@ -47,21 +47,21 @@ async function generateWithClaude(message: string, history: HistoryTurn[], apiKe
 }
 
 export async function POST(req: NextRequest) {
-  const { message, history, apiKey } = await req.json();
+  const { message, history } = await req.json();
 
   if (!message || typeof message !== "string" || !message.trim()) {
     return NextResponse.json({ error: "message is required" }, { status: 400 });
   }
 
-  const { key, usesServerKey } = resolveApiKey(apiKey);
+  const key = resolveApiKey();
   const turns: HistoryTurn[] = Array.isArray(history)
     ? history.filter((h): h is HistoryTurn => h && (h.role === "user" || h.role === "assistant") && typeof h.content === "string")
     : [];
 
-  if (key && (!usesServerKey || canUseServerKey())) {
+  if (key && canUseServerKey()) {
     try {
       const result = await generateWithClaude(message, turns, key);
-      if (usesServerKey && result.usage) recordServerUsage(result.usage.inputTokens + result.usage.outputTokens);
+      if (result.usage) recordServerUsage(result.usage.inputTokens + result.usage.outputTokens);
       return NextResponse.json(result);
     } catch (err) {
       const messageText = err instanceof Error ? err.message : "The Anthropic API request failed.";

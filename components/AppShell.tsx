@@ -10,7 +10,7 @@ import { useViewMode } from "@/hooks/useViewMode";
 import { useSidebarWidth } from "@/hooks/useSidebarWidth";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useBadges } from "@/hooks/useBadges";
-import { generateProjectTitle, getApiKey } from "@/lib/ai";
+import { generateProjectTitle } from "@/lib/ai";
 import { isTokenLimitReached } from "@/lib/tiers";
 import { PROJECT_TEMPLATES } from "@/lib/templates";
 import { EMPTY_GOAL_CONTEXT, GoalContext } from "@/lib/goalContext";
@@ -247,12 +247,8 @@ export default function AppShell() {
   // a real API call asking questions for a plan it's about to refuse to
   // generate anyway.
   const handleStartGeneration = (goal: string, deadline?: string, context?: GoalContext) => {
-    const apiKey = getApiKey();
-
-    if (apiKey && isTokenLimitReached(tier, tokenUsage.tokensUsed)) {
-      setGenerationError(
-        "You've used all your AI tokens this month — upgrade in Settings for more, or remove your API key to keep generating demo plans for free."
-      );
+    if (isTokenLimitReached(tier, tokenUsage.tokensUsed)) {
+      setGenerationError("You've used all your AI tokens this month — upgrade in Settings for more, or wait until next month.");
       return;
     }
 
@@ -276,7 +272,7 @@ export default function AppShell() {
     const fetchPromise = fetch("/api/generate-roadmap", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ goal, apiKey: getApiKey(), answers, context, deadline }),
+      body: JSON.stringify({ goal, answers, context, deadline }),
     }).then((res) => res.json());
     // Runs alongside the roadmap call rather than after it, so auto-titling
     // doesn't add its own extra wait on top of plan generation.

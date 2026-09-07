@@ -66,19 +66,19 @@ Return ONLY valid JSON, no prose, no markdown fences:
 }
 
 export async function POST(req: NextRequest) {
-  const { goal, apiKey, context } = await req.json();
+  const { goal, context } = await req.json();
 
   if (!goal || typeof goal !== "string" || !goal.trim()) {
     return NextResponse.json({ error: "goal is required" }, { status: 400 });
   }
 
-  const { key, usesServerKey } = resolveApiKey(apiKey);
+  const key = resolveApiKey();
   const goalContext: GoalContext | undefined = context ?? undefined;
 
-  if (key && (!usesServerKey || canUseServerKey())) {
+  if (key && canUseServerKey()) {
     try {
       const result = await generateWithClaude(goal, key, goalContext);
-      if (usesServerKey && result.usage) recordServerUsage(result.usage.inputTokens + result.usage.outputTokens);
+      if (result.usage) recordServerUsage(result.usage.inputTokens + result.usage.outputTokens);
       return NextResponse.json(result);
     } catch {
       // Question generation is a nice-to-have layer on top of the core

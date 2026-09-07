@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getApiKey } from "@/lib/ai";
 import { generateMockQuestions } from "@/lib/questions";
 import { GoalContext } from "@/lib/goalContext";
 import GlassCard from "./GlassCard";
@@ -47,7 +46,7 @@ export default function QuestionFlow({ goal, context, onComplete, onSkip }: Ques
         const res = await fetch("/api/generate-questions", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ goal, apiKey: getApiKey(), context }),
+          body: JSON.stringify({ goal, context }),
         });
         const data = await res.json();
         const next =
