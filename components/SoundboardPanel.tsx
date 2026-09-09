@@ -275,7 +275,7 @@ export default function SoundboardPanel({ open, onClose, tier, usage, onRecordTo
                   ? "Monthly AI usage limit reached"
                   : listening
                     ? "Listening…"
-                    : "What's the idea? Type or tap the mic..."
+                    : "What's the idea?"
               }
               rows={1}
               className="flex-1 resize-none bg-transparent text-sm text-ink-primary placeholder:text-ink-faint focus:outline-none py-1.5 max-h-24 disabled:cursor-not-allowed"
