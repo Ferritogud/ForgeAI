@@ -9,7 +9,11 @@
   --border: #e2e5ea;
   --ink-primary: #14161b;
   --ink-secondary: #5b6472;
-  --ink-faint: #98a2af;
+  /* Was #98a2af — 2.6:1 against card/bg, well under WCAG AA's 4.5:1 for
+     normal text. This is used for real (if de-emphasized) copy — dates,
+     counts, captions — not decoration, so it needs to actually be legible.
+     Darkened to ~4.6-4.9:1 while staying visibly lighter than --ink-secondary. */
+  --ink-faint: #66727c;
   --accent: #3b82f6;
   --accent-soft: rgba(59, 130, 246, 0.1);
   /* Momentum/streak — amber, distinct from --warn's red-orange so "you're on
@@ -35,7 +39,9 @@
   --border: #2a2a4f;
   --ink-primary: #e8f1ff;
   --ink-secondary: #8ca0c6;
-  --ink-faint: #5a6685;
+  /* Was #5a6685 — 2.8:1 against the card background, under WCAG AA.
+     Lightened to ~4.6-5:1 while staying visibly dimmer than --ink-secondary. */
+  --ink-faint: #7888ad;
   --accent: #3b82f6;
   --accent-soft: rgba(59, 130, 246, 0.16);
   --momentum: #da5d1a;
