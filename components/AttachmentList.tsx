@@ -64,7 +64,7 @@ export default function AttachmentList({ attachments, onRemove, size = "md" }: A
                   title={`${a.name} (${formatFileSize(a.size)})`}
                 >
                   <FileIcon />
-                  <span className="text-[0.6rem] leading-tight text-center truncate w-full">{a.name}</span>
+                  <span className="text-2xs leading-tight text-center truncate w-full">{a.name}</span>
                 </a>
               )}
 

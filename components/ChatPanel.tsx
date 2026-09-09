@@ -6,6 +6,7 @@ import { TOKEN_LIMITS, isTokenLimitReached } from "@/lib/tiers";
 import { fileToAttachment } from "@/lib/attachments";
 import AttachmentList from "./AttachmentList";
 import MarkdownText from "./MarkdownText";
+import TypingIndicator from "./TypingIndicator";
 
 function CloseIcon() {
   return (
@@ -216,11 +217,7 @@ export default function ChatPanel({
               )}
             </div>
           ))}
-          {sending && (
-            <div className="self-start rounded-2xl px-4 py-2.5 text-sm bg-card-muted border border-line text-ink-faint">
-              Thinking…
-            </div>
-          )}
+          {sending && <TypingIndicator />}
 
           {chatError && (
             <div className="rounded-xl border border-warn/30 bg-warn-soft p-3.5 text-xs text-warn leading-snug mt-1">
@@ -266,7 +263,7 @@ export default function ChatPanel({
                   style={{ width: `${percentUsed}%` }}
                 />
               </div>
-              <p className="font-mono text-[0.65rem] text-ink-faint mt-1 text-center">
+              <p className="font-mono text-2xs text-ink-faint mt-1 text-center">
                 {usage.tokensUsed.toLocaleString()} / {limit.toLocaleString()} tokens this month
               </p>
             </div>

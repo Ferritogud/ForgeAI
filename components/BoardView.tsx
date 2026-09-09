@@ -160,7 +160,7 @@ export default function BoardView({ milestones, onMoveTask }: BoardViewProps) {
                                 : ""}{" "}
                               — {group.milestone.title}
                             </span>
-                            <span className="font-mono text-[0.65rem] text-ink-faint shrink-0">
+                            <span className="font-mono text-2xs text-ink-faint shrink-0">
                               {group.items.length}
                             </span>
                           </button>
@@ -192,11 +192,11 @@ export default function BoardView({ milestones, onMoveTask }: BoardViewProps) {
                                         </p>
                                         <div className="flex items-center gap-1.5 shrink-0">
                                           {subTotal > 0 && (
-                                            <span className="font-mono text-[0.65rem] text-ink-faint">
+                                            <span className="font-mono text-2xs text-ink-faint">
                                               {subDone}/{subTotal}
                                             </span>
                                           )}
-                                          <span className="font-mono text-[0.65rem] px-1.5 py-0.5 rounded-full border border-line text-ink-secondary">
+                                          <span className="font-mono text-2xs px-1.5 py-0.5 rounded-full border border-line text-ink-secondary">
                                             {item.milestone.startDate && item.milestone.endDate
                                               ? formatPhaseRange(item.milestone.startDate, item.milestone.endDate)
                                               : ""}

@@ -111,7 +111,7 @@ export default function TaskGuidanceModal({
 
           <button
             onClick={onRegenerate}
-            className="self-start flex items-center gap-1 text-[0.7rem] text-ink-faint hover:text-accent transition-colors"
+            className="self-start flex items-center gap-1 text-2xs text-ink-faint hover:text-accent transition-colors"
           >
             <RefreshIcon />
             Regenerate

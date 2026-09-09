@@ -28,7 +28,7 @@ export default function HeatmapView({ project }: HeatmapViewProps) {
       <div className="flex gap-[3px] overflow-x-auto pb-1">
         <div className="flex flex-col gap-[3px] pr-1 pt-[18px] shrink-0">
           {DAY_LABELS.map((label, i) => (
-            <span key={i} className="h-[11px] text-[0.6rem] leading-[11px] text-ink-faint">
+            <span key={i} className="h-[11px] text-2xs leading-[11px] text-ink-faint">
               {label}
             </span>
           ))}
@@ -39,7 +39,7 @@ export default function HeatmapView({ project }: HeatmapViewProps) {
             {weeks.map((_, w) => {
               const month = monthLabels.find((m) => m.weekIndex === w);
               return (
-                <span key={w} className="w-[11px] text-[0.6rem] text-ink-faint whitespace-nowrap">
+                <span key={w} className="w-[11px] text-2xs text-ink-faint whitespace-nowrap">
                   {month?.label ?? ""}
                 </span>
               );
@@ -80,7 +80,7 @@ export default function HeatmapView({ project }: HeatmapViewProps) {
         </div>
       </div>
 
-      <div className="flex items-center gap-1.5 self-end text-[0.65rem] text-ink-faint">
+      <div className="flex items-center gap-1.5 self-end text-2xs text-ink-faint">
         Less
         {([0, 1, 2, 3, 4] as const).map((level) => (
           <span

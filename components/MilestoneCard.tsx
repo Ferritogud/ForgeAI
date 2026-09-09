@@ -371,7 +371,7 @@ export default function MilestoneCard({
         >
           <button
             {...dragHandleProps}
-            className="shrink-0 cursor-grab rounded p-0.5 text-ink-faint opacity-0 transition-opacity active:cursor-grabbing group-hover/row:opacity-100 hover:text-accent"
+            className="shrink-0 cursor-grab rounded-md p-0.5 text-ink-faint opacity-0 transition-opacity active:cursor-grabbing group-hover/row:opacity-100 hover:text-accent"
             aria-label="Reorder milestone"
           >
             <GripIcon />
@@ -410,7 +410,7 @@ export default function MilestoneCard({
               />
             </div>
             <span
-              className={`font-mono text-[0.7rem] px-2 py-0.5 rounded-full border whitespace-nowrap ${
+              className={`font-mono text-2xs px-2 py-0.5 rounded-full border whitespace-nowrap ${
                 complete ? "border-success text-success bg-success-soft" : "border-line text-ink-secondary"
               }`}
             >
@@ -419,7 +419,7 @@ export default function MilestoneCard({
             {!confirmingDelete && (
               <button
                 onClick={() => setConfirmingDelete(true)}
-                className="shrink-0 rounded p-1 text-ink-faint opacity-0 transition-opacity group-hover/row:opacity-100 hover:text-warn"
+                className="shrink-0 rounded-md p-1 text-ink-faint opacity-0 transition-opacity group-hover/row:opacity-100 hover:text-warn"
                 aria-label="Delete milestone"
               >
                 <TrashIcon />
@@ -449,7 +449,7 @@ export default function MilestoneCard({
           <div className="flex items-center gap-1.5">
             <button
               {...dragHandleProps}
-              className="shrink-0 cursor-grab rounded p-0.5 text-ink-faint opacity-0 transition-opacity active:cursor-grabbing group-hover/card:opacity-100 hover:text-accent"
+              className="shrink-0 cursor-grab rounded-md p-0.5 text-ink-faint opacity-0 transition-opacity active:cursor-grabbing group-hover/card:opacity-100 hover:text-accent"
               aria-label="Reorder milestone"
             >
               <GripIcon />
@@ -480,7 +480,7 @@ export default function MilestoneCard({
             />
           )}
           <span
-            className={`font-mono text-[0.7rem] px-2 py-0.5 rounded-full border ${
+            className={`font-mono text-2xs px-2 py-0.5 rounded-full border ${
               complete ? "border-success text-success bg-success-soft" : "border-line text-ink-secondary"
             }`}
           >
@@ -489,7 +489,7 @@ export default function MilestoneCard({
           {!confirmingDelete && !regenerateOpen ? (
             <button
               onClick={() => setRegenerateOpen(true)}
-              className="rounded p-1 text-ink-faint opacity-0 transition-opacity group-hover/card:opacity-100 hover:text-accent"
+              className="rounded-md p-1 text-ink-faint opacity-0 transition-opacity group-hover/card:opacity-100 hover:text-accent"
               aria-label="This isn't right — regenerate this milestone"
               title="This isn't right — regenerate"
             >
@@ -499,7 +499,7 @@ export default function MilestoneCard({
           {!confirmingDelete ? (
             <button
               onClick={() => setConfirmingDelete(true)}
-              className="rounded p-1 text-ink-faint opacity-0 transition-opacity group-hover/card:opacity-100 hover:text-warn"
+              className="rounded-md p-1 text-ink-faint opacity-0 transition-opacity group-hover/card:opacity-100 hover:text-warn"
               aria-label="Delete milestone"
             >
               <TrashIcon />
@@ -507,7 +507,7 @@ export default function MilestoneCard({
           ) : null}
           <button
             onClick={onToggleExpanded}
-            className="rounded p-1 text-ink-faint hover:text-accent transition-colors"
+            className="rounded-md p-1 text-ink-faint hover:text-accent transition-colors"
             aria-label="Collapse milestone"
             title="Collapse"
           >
@@ -540,7 +540,7 @@ export default function MilestoneCard({
                       <div className="group/task flex items-start gap-1.5">
                         <button
                           {...taskDragProvided.dragHandleProps}
-                          className="shrink-0 mt-0.5 cursor-grab rounded p-0.5 text-ink-faint opacity-0 transition-opacity active:cursor-grabbing group-hover/task:opacity-100 hover:text-accent"
+                          className="shrink-0 mt-0.5 cursor-grab rounded-md p-0.5 text-ink-faint opacity-0 transition-opacity active:cursor-grabbing group-hover/task:opacity-100 hover:text-accent"
                           aria-label="Reorder task"
                         >
                           <GripIcon />
@@ -556,9 +556,9 @@ export default function MilestoneCard({
                           />
                           <label
                             htmlFor={`task-${index}-${i}-checkbox`}
-                            className="flex items-center justify-center w-[18px] h-[18px] rounded-[5px] border cursor-pointer transition-all duration-200
+                            className="flex items-center justify-center w-[18px] h-[18px] rounded-md border cursor-pointer transition-all duration-200
                               border-line bg-card-muted
-                              peer-checked:border-success peer-checked:bg-success-soft
+                              peer-checked:border-success peer-checked:bg-success-soft peer-checked:animate-check-pop
                               hover:border-success"
                           >
                             <svg
@@ -591,7 +591,7 @@ export default function MilestoneCard({
 
                         <button
                           onClick={() => openGuidance(i, task)}
-                          className={`shrink-0 rounded p-1 transition-colors ${
+                          className={`shrink-0 rounded-md p-1 transition-colors ${
                             openGuidanceIndex === i ? "text-accent" : "text-ink-faint hover:text-accent"
                           }`}
                           aria-label="How do I do this?"
@@ -602,11 +602,11 @@ export default function MilestoneCard({
 
                         <button
                           onClick={() => toggleSubtaskExpanded(i)}
-                          className="shrink-0 flex items-center gap-1 px-1 py-0.5 rounded text-ink-faint hover:text-accent transition-colors"
+                          className="shrink-0 flex items-center gap-1 px-1 py-0.5 rounded-md text-ink-faint hover:text-accent transition-colors"
                           aria-label={isExpanded ? "Collapse sub-tasks" : "Expand sub-tasks"}
                         >
                           {subTotal > 0 && (
-                            <span className="font-mono text-[0.65rem]">
+                            <span className="font-mono text-2xs">
                               {subDone}/{subTotal}
                             </span>
                           )}
@@ -615,7 +615,7 @@ export default function MilestoneCard({
 
                         <button
                           onClick={() => onDeleteTask(i)}
-                          className="shrink-0 rounded p-0.5 text-ink-faint opacity-0 transition-opacity group-hover/task:opacity-100 hover:text-warn"
+                          className="shrink-0 rounded-md p-0.5 text-ink-faint opacity-0 transition-opacity group-hover/task:opacity-100 hover:text-warn"
                           aria-label="Delete task"
                         >
                           <CloseIcon />
@@ -634,9 +634,9 @@ export default function MilestoneCard({
                                   className="peer sr-only"
                                 />
                                 <span
-                                  className="flex items-center justify-center w-[14px] h-[14px] rounded border transition-all duration-200
+                                  className="flex items-center justify-center w-[14px] h-[14px] rounded-md border transition-all duration-200
                                     border-line bg-card-muted
-                                    peer-checked:border-success peer-checked:bg-success-soft
+                                    peer-checked:border-success peer-checked:bg-success-soft peer-checked:animate-check-pop
                                     group-hover/sub:border-success"
                                 >
                                   <svg

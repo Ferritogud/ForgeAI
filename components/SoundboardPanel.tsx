@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Tier, TokenUsage } from "@/lib/types";
 import { TOKEN_LIMITS, isTokenLimitReached } from "@/lib/tiers";
 import MarkdownText from "./MarkdownText";
+import TypingIndicator from "./TypingIndicator";
 
 interface SoundboardMessage {
   role: "user" | "assistant";
@@ -206,11 +207,7 @@ export default function SoundboardPanel({ open, onClose, tier, usage, onRecordTo
               {m.role === "assistant" ? <MarkdownText text={m.content} /> : <span className="leading-relaxed">{m.content}</span>}
             </div>
           ))}
-          {sending && (
-            <div className="self-start rounded-2xl px-4 py-2.5 text-sm bg-card-muted border border-line text-ink-faint">
-              Thinking…
-            </div>
-          )}
+          {sending && <TypingIndicator />}
 
           {error && (
             <div className="rounded-xl border border-warn/30 bg-warn-soft p-3.5 text-xs text-warn leading-snug mt-1">
@@ -236,7 +233,7 @@ export default function SoundboardPanel({ open, onClose, tier, usage, onRecordTo
 
         <div className="px-5 pb-5 pt-2 shrink-0">
           {!isUnlimited && (
-            <p className="font-mono text-[0.65rem] text-ink-faint mb-2 text-center">
+            <p className="font-mono text-2xs text-ink-faint mb-2 text-center">
               Shared with your other AI usage — {usage.tokensUsed.toLocaleString()} / {limit.toLocaleString()} tokens
               this month
             </p>

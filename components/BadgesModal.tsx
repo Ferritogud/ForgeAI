@@ -29,7 +29,7 @@ export default function BadgesModal({ open, onClose, earned }: BadgesModalProps)
               </span>
               <span className="text-xs text-ink-faint leading-snug">{badge.description}</span>
               {isEarned && record && (
-                <span className="text-[0.65rem] font-mono text-accent mt-0.5">
+                <span className="text-2xs font-mono text-accent mt-0.5">
                   {new Date(record.earnedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                 </span>
               )}

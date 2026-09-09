@@ -404,7 +404,7 @@ export default function Sidebar({
                             if (e.key === "Enter") commitRename();
                             if (e.key === "Escape") setRenamingId(null);
                           }}
-                          className="w-full bg-card-muted border border-accent/50 rounded px-1.5 py-0.5 text-sm text-ink-primary focus:outline-none"
+                          className="w-full bg-card-muted border border-accent/50 rounded-md px-1.5 py-0.5 text-sm text-ink-primary focus:outline-none"
                         />
                       ) : (
                         <p

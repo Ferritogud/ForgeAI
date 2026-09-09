@@ -105,7 +105,7 @@ export default function TrashPanel({ entries, onRestore, onDeletePermanently, on
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[0.6rem] font-mono uppercase tracking-wide text-ink-faint px-1.5 py-0.5 rounded-full border border-line">
+                      <span className="text-2xs font-mono uppercase tracking-wide text-ink-faint px-1.5 py-0.5 rounded-full border border-line">
                         {TYPE_LABEL[entry.type]}
                       </span>
                       <span className="text-xs font-mono text-ink-faint">{left} day{left === 1 ? "" : "s"} left</span>

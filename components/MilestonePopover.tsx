@@ -55,7 +55,7 @@ export default function MilestonePopover({ anchorRect, milestone, onToggleTask, 
         <div className="p-3.5 flex flex-col gap-2.5">
           <div className="flex items-center justify-between gap-2">
             <span className="text-sm font-semibold text-ink-primary truncate">{milestone.title}</span>
-            <span className="font-mono text-[0.65rem] px-2 py-0.5 rounded-full border border-line text-ink-secondary shrink-0">
+            <span className="font-mono text-2xs px-2 py-0.5 rounded-full border border-line text-ink-secondary shrink-0">
               {milestone.startDate && milestone.endDate ? formatPhaseRange(milestone.startDate, milestone.endDate) : ""}
             </span>
           </div>
@@ -75,14 +75,14 @@ export default function MilestonePopover({ anchorRect, milestone, onToggleTask, 
                       className="peer sr-only"
                     />
                     <span
-                      className="flex items-center justify-center w-[16px] h-[16px] rounded border transition-all duration-200
+                      className="flex items-center justify-center w-[16px] h-[16px] rounded-md border transition-all duration-200
                         border-line bg-card-muted
-                        peer-checked:border-accent peer-checked:bg-accent-soft
-                        group-hover:border-accent"
+                        peer-checked:border-success peer-checked:bg-success-soft peer-checked:animate-check-pop
+                        group-hover:border-success"
                     >
                       <svg
                         viewBox="0 0 12 10"
-                        className={`w-2.5 h-2.5 transition-opacity duration-150 text-accent ${
+                        className={`w-2.5 h-2.5 transition-opacity duration-150 text-success ${
                           task.completed ? "opacity-100" : "opacity-0"
                         }`}
                       >

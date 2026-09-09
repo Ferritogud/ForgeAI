@@ -75,7 +75,7 @@ export default function TimelineView({ project, onToggleTask }: TimelineViewProp
         {/* Today / deadline markers — full-height vertical lines with a label at the top */}
         {todayX >= 0 && (
           <div className="absolute top-0 bottom-0 z-10 flex flex-col items-center" style={{ left: todayX }}>
-            <span className="text-[0.6rem] font-mono uppercase tracking-wide text-accent whitespace-nowrap -translate-x-1/2 mb-1">
+            <span className="text-2xs font-mono uppercase tracking-wide text-accent whitespace-nowrap -translate-x-1/2 mb-1">
               Today
             </span>
             <div className="w-px flex-1 bg-accent" />
@@ -83,7 +83,7 @@ export default function TimelineView({ project, onToggleTask }: TimelineViewProp
         )}
         {deadlineX !== null && deadlineX >= 0 && (
           <div className="absolute top-0 bottom-0 z-10 flex flex-col items-center" style={{ left: deadlineX }}>
-            <span className="text-[0.6rem] font-mono uppercase tracking-wide text-warn whitespace-nowrap -translate-x-1/2 mb-1">
+            <span className="text-2xs font-mono uppercase tracking-wide text-warn whitespace-nowrap -translate-x-1/2 mb-1">
               {deadlineLabel}
             </span>
             <div className="w-px flex-1 bg-warn" />
@@ -132,7 +132,7 @@ export default function TimelineView({ project, onToggleTask }: TimelineViewProp
                 <span className="text-sm font-semibold text-ink-primary leading-snug line-clamp-2">
                   {milestone.title}
                 </span>
-                <span className="font-mono text-[0.65rem] text-ink-faint">
+                <span className="font-mono text-2xs text-ink-faint">
                   {done}/{total} · {formatPhaseRange(ranges[i].start.toISOString(), ranges[i].end.toISOString())}
                 </span>
                 <div className="h-1 w-full rounded-full bg-card overflow-hidden mt-0.5">

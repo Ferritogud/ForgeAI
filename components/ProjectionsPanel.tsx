@@ -48,13 +48,13 @@ export default function ProjectionsPanel({ project, percent, now }: ProjectionsP
   return (
     <GlassCard className="rounded-xl px-3 py-2 flex items-center gap-2.5 min-w-[170px]">
       <RadialGauge percent={percent} size={36} strokeWidth={3.5} strokeColor={cfg.strokeColor}>
-        <span className="font-mono text-[0.6rem] text-ink-primary">{Math.round(percent)}%</span>
+        <span className="font-mono text-2xs text-ink-primary">{Math.round(percent)}%</span>
       </RadialGauge>
 
       <div className="flex flex-col gap-0.5 min-w-0">
-        <span className="eyebrow text-[0.6rem]">Projection</span>
+        <span className="eyebrow text-2xs">Projection</span>
         <span className="font-mono text-xs text-ink-primary truncate">{label}</span>
-        <div className={`flex items-center gap-1 text-[0.7rem] font-medium ${cfg.className}`}>
+        <div className={`flex items-center gap-1 text-2xs font-medium ${cfg.className}`}>
           <TrendArrow trend={trend} />
           <span>{cfg.text}</span>
         </div>

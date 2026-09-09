@@ -11,6 +11,14 @@ const STEPS = [
   "Finalizing execution plan...",
 ];
 
+function CheckIcon() {
+  return (
+    <svg viewBox="0 0 12 10" className="w-3 h-2.5" fill="none">
+      <path d="M1 5L4.5 8.5L11 1.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 interface GeneratingScreenProps {
   goal: string;
 }
@@ -45,8 +53,8 @@ export default function GeneratingScreen({ goal }: GeneratingScreenProps) {
                     shown ? "opacity-100" : "opacity-0"
                   }`}
                 >
-                  <span className="inline-block w-3.5 text-accent">
-                    {shown && !active ? "✓" : shown ? "▸" : ""}
+                  <span className="inline-flex items-center justify-center w-3.5 text-accent">
+                    {shown && !active ? <CheckIcon /> : shown ? "▸" : null}
                   </span>
                   <span className={active ? "text-ink-primary" : "text-ink-secondary"}>
                     {step}

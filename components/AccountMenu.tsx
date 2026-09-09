@@ -35,7 +35,7 @@ function SignOutIcon() {
 
 function KeyBadge({ children }: { children: React.ReactNode }) {
   return (
-    <kbd className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded border border-line bg-card-muted text-[10px] font-medium text-ink-faint">
+    <kbd className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-md border border-line bg-card-muted text-2xs font-medium text-ink-faint">
       {children}
     </kbd>
   );

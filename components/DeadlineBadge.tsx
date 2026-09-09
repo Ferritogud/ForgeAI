@@ -33,7 +33,7 @@ export default function DeadlineBadge({ deadline }: DeadlineBadgeProps) {
         <CalendarIcon />
       </div>
       <div className="flex flex-col gap-0.5 min-w-0">
-        <span className="eyebrow text-[0.6rem]">Deadline</span>
+        <span className="eyebrow text-2xs">Deadline</span>
         <span className={`text-xs font-medium truncate ${isOverdue ? "text-warn" : "text-ink-primary"}`}>
           {label}
         </span>

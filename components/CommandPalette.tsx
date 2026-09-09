@@ -177,7 +177,7 @@ export default function CommandPalette({
               placeholder="Search projects, milestones, tasks, or run a command…"
               className="flex-1 min-w-0 bg-transparent text-sm text-ink-primary placeholder:text-ink-faint focus:outline-none"
             />
-            <kbd className="hidden sm:inline-block text-[0.65rem] font-mono text-ink-faint border border-line rounded px-1.5 py-0.5">
+            <kbd className="hidden sm:inline-block text-2xs font-mono text-ink-faint border border-line rounded-md px-1.5 py-0.5">
               ESC
             </kbd>
           </div>

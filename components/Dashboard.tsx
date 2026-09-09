@@ -270,7 +270,7 @@ export default function Dashboard({
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 min-w-0">
-                <ProjectIconButton icon={project.icon} onSelect={(icon) => onSetIcon(project.id, icon)} size="xs" />
+                <ProjectIconButton icon={project.icon} onSelect={(icon) => onSetIcon(project.id, icon)} size="sm" />
                 {project.goal !== project.name ? (
                   <button
                     onClick={() => setShowGoal((v) => !v)}
@@ -278,12 +278,12 @@ export default function Dashboard({
                     aria-expanded={showGoal}
                     title="Click to show the original prompt"
                   >
-                    <h1 className="truncate text-sm font-bold text-ink-primary tracking-tight group-hover:text-accent transition-colors">
+                    <h1 className="truncate text-2xl font-bold text-ink-primary tracking-tight group-hover:text-accent transition-colors">
                       {headline}
                     </h1>
                   </button>
                 ) : (
-                  <h1 className="truncate text-sm font-bold text-ink-primary tracking-tight">{headline}</h1>
+                  <h1 className="truncate text-2xl font-bold text-ink-primary tracking-tight">{headline}</h1>
                 )}
                 <StreakBadge streakCount={project.streakCount} />
               </div>
@@ -314,7 +314,7 @@ export default function Dashboard({
                 </div>
                 <button
                   onClick={() => setShowRationale(false)}
-                  className="shrink-0 rounded p-1 text-accent/60 hover:text-accent hover:bg-accent-soft transition-colors"
+                  className="shrink-0 rounded-md p-1 text-accent/60 hover:text-accent hover:bg-accent-soft transition-colors"
                   aria-label="Hide why this plan"
                   title="Hide"
                 >
@@ -344,48 +344,56 @@ export default function Dashboard({
         </header>
 
         {viewMode === "checklist" && (
-          <ChecklistView
-            project={project}
-            onToggleTask={(i, taskIndex) => onToggleTask(project.id, i, taskIndex)}
-            onToggleSubtask={(i, taskIndex, subtaskId) => onToggleSubtask(project.id, i, taskIndex, subtaskId)}
-            onAddSubtask={(i, taskIndex, text) => onAddSubtask(project.id, i, taskIndex, text)}
-            onUpdateTaskText={(i, taskIndex, title) => onUpdateTaskText(project.id, i, taskIndex, title)}
-            onAddTask={(i, title) => onAddTask(project.id, i, title)}
-            onDeleteTask={(i, taskIndex) => onDeleteTask(project.id, i, taskIndex)}
-            onReorderTasks={(i, from, to) => onReorderTasks(project.id, i, from, to)}
-            onUpdateMilestoneTitle={(i, title) => onUpdateMilestoneTitle(project.id, i, title)}
-            onAddMilestone={(title, weekLabel, initialTasks) => onAddMilestone(project.id, title, weekLabel, initialTasks)}
-            onDeleteMilestone={(i) => onDeleteMilestone(project.id, i)}
-            onRegenerateMilestone={(i, title, taskTexts) => onRegenerateMilestone(project.id, i, title, taskTexts)}
-            onReorderMilestones={(from, to) => onReorderMilestones(project.id, from, to)}
-            highlightMilestoneId={highlightMilestoneId}
-            onRecordTokens={onRecordTokens}
-          />
+          <div className="animate-fade-up">
+            <ChecklistView
+              project={project}
+              onToggleTask={(i, taskIndex) => onToggleTask(project.id, i, taskIndex)}
+              onToggleSubtask={(i, taskIndex, subtaskId) => onToggleSubtask(project.id, i, taskIndex, subtaskId)}
+              onAddSubtask={(i, taskIndex, text) => onAddSubtask(project.id, i, taskIndex, text)}
+              onUpdateTaskText={(i, taskIndex, title) => onUpdateTaskText(project.id, i, taskIndex, title)}
+              onAddTask={(i, title) => onAddTask(project.id, i, title)}
+              onDeleteTask={(i, taskIndex) => onDeleteTask(project.id, i, taskIndex)}
+              onReorderTasks={(i, from, to) => onReorderTasks(project.id, i, from, to)}
+              onUpdateMilestoneTitle={(i, title) => onUpdateMilestoneTitle(project.id, i, title)}
+              onAddMilestone={(title, weekLabel, initialTasks) => onAddMilestone(project.id, title, weekLabel, initialTasks)}
+              onDeleteMilestone={(i) => onDeleteMilestone(project.id, i)}
+              onRegenerateMilestone={(i, title, taskTexts) => onRegenerateMilestone(project.id, i, title, taskTexts)}
+              onReorderMilestones={(from, to) => onReorderMilestones(project.id, from, to)}
+              highlightMilestoneId={highlightMilestoneId}
+              onRecordTokens={onRecordTokens}
+            />
+          </div>
         )}
 
         {viewMode === "board" && (
-          <BoardView
-            milestones={project.milestones}
-            onMoveTask={(milestoneIndex, taskIndex, column) => onMoveTask(project.id, milestoneIndex, taskIndex, column)}
-          />
+          <div className="animate-fade-up">
+            <BoardView
+              milestones={project.milestones}
+              onMoveTask={(milestoneIndex, taskIndex, column) => onMoveTask(project.id, milestoneIndex, taskIndex, column)}
+            />
+          </div>
         )}
 
         {viewMode === "timeline" && (
-          <TimelineView
-            project={project}
-            onToggleTask={(milestoneIndex, taskIndex) => onToggleTask(project.id, milestoneIndex, taskIndex)}
-          />
+          <div className="animate-fade-up">
+            <TimelineView
+              project={project}
+              onToggleTask={(milestoneIndex, taskIndex) => onToggleTask(project.id, milestoneIndex, taskIndex)}
+            />
+          </div>
         )}
 
         {viewMode === "notes" && (
-          <NotesPanel
-            projectId={project.id}
-            notes={project.notes}
-            attachments={project.noteAttachments}
-            onSave={onUpdateNotes}
-            onAddAttachment={onAddNoteAttachment}
-            onRemoveAttachment={onRemoveNoteAttachment}
-          />
+          <div className="animate-fade-up">
+            <NotesPanel
+              projectId={project.id}
+              notes={project.notes}
+              attachments={project.noteAttachments}
+              onSave={onUpdateNotes}
+              onAddAttachment={onAddNoteAttachment}
+              onRemoveAttachment={onRemoveNoteAttachment}
+            />
+          </div>
         )}
       </div>
     </main>

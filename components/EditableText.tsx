@@ -71,7 +71,7 @@ export default function EditableText({ value, onSave, as = "span", className = "
         setDraft(value);
         setEditing(true);
       }}
-      className={`cursor-text rounded transition-colors hover:bg-card-muted ${className}`}
+      className={`cursor-text rounded-md transition-colors hover:bg-card-muted ${className}`}
       title="Click to edit"
     >
       {value}

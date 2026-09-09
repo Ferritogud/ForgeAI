@@ -40,14 +40,30 @@ const config: Config = {
         mono: ["var(--font-mono)", "ui-monospace", "monospace"],
         sans: ["var(--font-sans)", "ui-sans-serif", "system-ui"],
       },
+      fontSize: {
+        // Fills the one real gap in Tailwind's default scale: a single
+        // "micro" size for mono badges/pills/eyebrows that previously used
+        // three near-identical arbitrary values (0.6rem/0.65rem/0.7rem)
+        // interchangeably across components.
+        "2xs": ["0.6875rem", { lineHeight: "1rem" }],
+      },
       keyframes: {
         "fade-up": {
           "0%": { opacity: "0", transform: "translateY(8px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        // Plays once whenever a checkbox's :checked state turns on (pure
+        // CSS pseudo-class transition, so it never replays on unrelated
+        // re-renders) — a satisfying snap instead of a flat opacity fade.
+        "check-pop": {
+          "0%": { transform: "scale(0.6)" },
+          "60%": { transform: "scale(1.15)" },
+          "100%": { transform: "scale(1)" },
+        },
       },
       animation: {
         "fade-up": "fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+        "check-pop": "check-pop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)",
       },
     },
   },

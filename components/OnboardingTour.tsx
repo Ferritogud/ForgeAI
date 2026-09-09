@@ -102,7 +102,7 @@ export default function OnboardingTour({ step, stepNumber, totalSteps, onNext, o
       <div style={spotlightStyle} />
       <div style={tooltipStyle} className="card rounded-2xl p-4 flex flex-col gap-3 shadow-lg animate-fade-up">
         <div className="flex items-center justify-between">
-          <span className="font-mono text-[0.65rem] text-ink-faint">
+          <span className="font-mono text-2xs text-ink-faint">
             STEP {stepNumber} / {totalSteps}
           </span>
           <button
