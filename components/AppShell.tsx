@@ -16,6 +16,7 @@ import { PROJECT_TEMPLATES } from "@/lib/templates";
 import { EMPTY_GOAL_CONTEXT, GoalContext } from "@/lib/goalContext";
 import Sidebar from "./Sidebar";
 import SignInScreen from "./SignInScreen";
+import LandingPage from "./LandingPage";
 import InputScreen from "./InputScreen";
 import QuestionFlow, { QuestionAnswer } from "./QuestionFlow";
 import ConfirmationScreen from "./ConfirmationScreen";
@@ -93,6 +94,7 @@ export default function AppShell() {
   const onboarding = useOnboarding();
   const badges = useBadges();
 
+  const [showSignIn, setShowSignIn] = useState(false);
   const [mode, setMode] = useState<Mode>("dashboard");
   const [pendingGoal, setPendingGoal] = useState("");
   const [pendingDeadline, setPendingDeadline] = useState<string | undefined>(undefined);
@@ -343,7 +345,13 @@ export default function AppShell() {
   // Whole app is gated behind mock sign-in (rather than leaving it reachable
   // via the sidebar) — the account menu (Part B) shows the signed-in user's
   // info, so there needs to always be one by the time the dashboard renders.
-  if (!auth.user) return <SignInScreen />;
+  if (!auth.user) {
+    return showSignIn ? (
+      <SignInScreen onBack={() => setShowSignIn(false)} />
+    ) : (
+      <LandingPage onGetStarted={() => setShowSignIn(true)} />
+    );
+  }
 
   const highlightedId = effectiveMode === "input" ? null : activeProjectId;
   const sidebarOffset = collapsed ? "md:ml-[76px]" : "md:ml-[var(--sidebar-w)]";

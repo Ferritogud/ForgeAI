@@ -24,7 +24,7 @@ function SpinnerIcon({ className = "" }: { className?: string }) {
   );
 }
 
-export default function SignInScreen() {
+export default function SignInScreen({ onBack }: { onBack?: () => void } = {}) {
   const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [loadingProvider, setLoadingProvider] = useState<"google" | "email" | null>(null);
   const [name, setName] = useState("");
@@ -137,6 +137,15 @@ export default function SignInScreen() {
   return (
     <main className="relative min-h-screen flex flex-col items-center justify-center px-6">
       <div className="w-full max-w-sm animate-fade-up">
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            className="text-sm font-medium text-ink-faint hover:text-accent transition-colors mb-4"
+          >
+            ← Back
+          </button>
+        )}
         <div className="flex flex-col items-center mb-7">
           <div className="flex items-center gap-2 mb-4">
             <span className="inline-flex h-2 w-2 rounded-full bg-accent" />
