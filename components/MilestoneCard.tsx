@@ -383,7 +383,7 @@ export default function MilestoneCard({
             </span>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <span className="eyebrow whitespace-nowrap">
+                <span className="eyebrow">
                   Phase {index + 1} of {total}
                 </span>
                 {complete && <CheckIcon />}
@@ -454,7 +454,7 @@ export default function MilestoneCard({
             >
               <GripIcon />
             </button>
-            <span className="eyebrow whitespace-nowrap">
+            <span className="eyebrow">
               Phase {index + 1} of {total}
             </span>
           </div>
