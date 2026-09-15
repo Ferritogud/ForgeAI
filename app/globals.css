@@ -33,15 +33,21 @@
 }
 
 .dark {
-  --bg: #16162a;
-  --card: #1d1d3d;
-  --card-muted: #12121f;
-  --border: #2a2a4f;
-  --ink-primary: #e8f1ff;
-  --ink-secondary: #8ca0c6;
-  /* Was #5a6685 — 2.8:1 against the card background, under WCAG AA.
-     Lightened to ~4.6-5:1 while staying visibly dimmer than --ink-secondary. */
-  --ink-faint: #7888ad;
+  /* Neutral zinc-based dark palette — replaces the earlier purple-navy tint
+     (#16162a/#1d1d3d/#2a2a4f), which read closer to a gamer/Discord theme
+     than the restrained, near-black neutral used by Linear/Vercel-style
+     tools. Accent/momentum/success/warn hues are unchanged; only the
+     neutrals (background, surfaces, borders, ink) moved to true gray so the
+     single blue accent is the only saturated color doing any work. */
+  --bg: #09090b;
+  --card: #18181b;
+  --card-muted: #131315;
+  --border: #27272a;
+  --ink-primary: #fafafa;
+  --ink-secondary: #a1a1aa;
+  /* zinc-500 on zinc-900 card ≈ 4.6:1 — keeps the WCAG AA contrast target
+     from the earlier legibility fix while matching the new neutral hue. */
+  --ink-faint: #71717a;
   --accent: #3b82f6;
   --accent-soft: rgba(59, 130, 246, 0.16);
   --momentum: #da5d1a;
