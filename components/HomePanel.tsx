@@ -1,10 +1,18 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MockUser, Project, Tier } from "@/lib/types";
 import { isMilestoneComplete, getMilestoneStatus } from "@/lib/milestones";
 import { TIER_LIMITS } from "@/lib/tiers";
 import StreakBadge from "./StreakBadge";
+
+function BoltIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="w-4 h-4" fill="none">
+      <path d="M8.5 1.5 3 9h4l-.5 5.5L13 7H9l-.5-5.5Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
 function FolderIcon() {
   return (
@@ -65,6 +73,16 @@ interface FocusItem {
   slipped: boolean;
 }
 
+interface QuickWin {
+  projectId: string;
+  projectName: string;
+  milestoneIndex: number;
+  taskIndex: number;
+  taskId: string;
+  text: string;
+  completed: boolean;
+}
+
 interface HomePanelProps {
   user: MockUser;
   projects: Project[];
@@ -74,6 +92,7 @@ interface HomePanelProps {
   onNewProject: () => void;
   onOpenSoundboard: () => void;
   onToggleTask: (projectId: string, milestoneIndex: number, taskIndex: number) => void;
+  onRecordTokens: (tokens: number) => void;
 }
 
 function timeOfDayGreeting(): string {
@@ -92,6 +111,7 @@ export default function HomePanel({
   onNewProject,
   onOpenSoundboard,
   onToggleTask,
+  onRecordTokens,
 }: HomePanelProps) {
   const firstName = user.name.trim().split(/\s+/)[0] || user.name;
 
@@ -124,6 +144,94 @@ export default function HomePanel({
     return items.slice(0, 6);
   }, [projects]);
 
+  // The smallest, easiest pending task across every project — tasks with no
+  // subtasks (nothing to break down further) win, shortest text as a rough
+  // "quick to knock out" tiebreaker. The point is a always-available "I only
+  // have 2 minutes" option, distinct from Today's Focus above.
+  const quickWin = useMemo<QuickWin | null>(() => {
+    const candidates: QuickWin[] = [];
+    for (const project of projects) {
+      project.milestones.forEach((milestone, milestoneIndex) => {
+        milestone.tasks.forEach((task, taskIndex) => {
+          if (task.completed) return;
+          candidates.push({
+            projectId: project.id,
+            projectName: project.name,
+            milestoneIndex,
+            taskIndex,
+            taskId: task.id,
+            text: task.text,
+            completed: task.completed,
+          });
+        });
+      });
+    }
+    if (candidates.length === 0) return null;
+
+    const withoutSubtasks = candidates.filter((c) => {
+      const project = projects.find((p) => p.id === c.projectId);
+      const task = project?.milestones[c.milestoneIndex]?.tasks[c.taskIndex];
+      return (task?.subtasks.length ?? 0) === 0;
+    });
+    const pool = withoutSubtasks.length > 0 ? withoutSubtasks : candidates;
+    return pool.reduce((shortest, c) => (c.text.length < shortest.text.length ? c : shortest), pool[0]);
+  }, [projects]);
+
+  const [focusMessage, setFocusMessage] = useState<string | null>(null);
+  const [focusMessageLoading, setFocusMessageLoading] = useState(true);
+
+  // A short project summary is the effect dependency (not `projects` itself)
+  // so this only re-fetches when something that'd actually change the
+  // message changes — not on every unrelated re-render.
+  const focusSummary = useMemo(
+    () =>
+      projects.map((project) => {
+        const milestone = project.milestones.find((m) => !isMilestoneComplete(m));
+        return {
+          name: project.name,
+          currentMilestone: milestone?.title ?? null,
+          pendingCount: milestone ? milestone.tasks.filter((t) => !t.completed).length : 0,
+          slipped: milestone ? getMilestoneStatus(project, milestone) === "slipped" : false,
+        };
+      }),
+    [projects]
+  );
+  const focusSummaryKey = JSON.stringify(focusSummary);
+
+  useEffect(() => {
+    if (focusSummary.length === 0) {
+      setFocusMessageLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setFocusMessageLoading(true);
+    // Debounced — checking off several tasks in a row on this screen would
+    // otherwise fire one AI call per click. Only the state after activity
+    // settles is worth a fresh message.
+    const timer = setTimeout(() => {
+      fetch("/api/home-focus", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projects: focusSummary }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (cancelled) return;
+          if (typeof data.message === "string") setFocusMessage(data.message);
+          if (data.usage) onRecordTokens(data.usage.inputTokens + data.usage.outputTokens);
+        })
+        .catch(() => {})
+        .finally(() => {
+          if (!cancelled) setFocusMessageLoading(false);
+        });
+    }, 1200);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusSummaryKey]);
+
   const maxStreak = Math.max(0, ...projects.map((p) => p.streakCount));
   const allTasks = projects.flatMap((p) => p.milestones.flatMap((m) => m.tasks));
   const doneThisWeekCount = (() => {
@@ -144,6 +252,19 @@ export default function HomePanel({
           </h1>
           {maxStreak > 0 && <StreakBadge streakCount={maxStreak} />}
         </div>
+
+        {projects.length > 0 && (
+          <div className="flex items-start gap-2 mt-1">
+            <span className="text-accent shrink-0 mt-0.5">
+              <SparkleIcon />
+            </span>
+            {focusMessageLoading ? (
+              <span className="h-4 w-64 max-w-full rounded bg-card-muted animate-pulse" />
+            ) : (
+              <p className="text-sm text-ink-secondary">{focusMessage}</p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Quick stats */}
@@ -170,6 +291,40 @@ export default function HomePanel({
           </p>
         </div>
       </div>
+
+      {/* Quick win — always-visible smallest available task, for whenever
+          there's only a couple of minutes to spare. */}
+      {quickWin && (
+        <section className="mb-8">
+          <div className="card rounded-2xl p-4 border-momentum/30 bg-momentum-soft flex items-center gap-3">
+            <span className="shrink-0 flex items-center justify-center w-8 h-8 rounded-lg bg-card text-momentum">
+              <BoltIcon />
+            </span>
+            <div className="min-w-0 flex-1">
+              <span className="eyebrow text-momentum">Quick Win</span>
+              <p className="text-sm text-ink-primary truncate">{quickWin.text}</p>
+            </div>
+            <span className="relative shrink-0">
+              <input
+                type="checkbox"
+                checked={quickWin.completed}
+                onChange={() => onToggleTask(quickWin.projectId, quickWin.milestoneIndex, quickWin.taskIndex)}
+                className="peer sr-only"
+                id={`quickwin-${quickWin.taskId}`}
+              />
+              <label
+                htmlFor={`quickwin-${quickWin.taskId}`}
+                className="flex items-center justify-center w-[18px] h-[18px] rounded-md border cursor-pointer transition-all duration-200
+                  border-line bg-card
+                  peer-checked:border-success peer-checked:bg-success-soft peer-checked:animate-check-pop
+                  hover:border-success text-success"
+              >
+                <CheckIcon />
+              </label>
+            </span>
+          </div>
+        </section>
+      )}
 
       {/* Today's focus — the whole point of this screen: land here, see the
           handful of tasks across every project that actually matter right

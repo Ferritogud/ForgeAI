@@ -507,6 +507,7 @@ export default function AppShell() {
             onNewProject={handleNewProject}
             onOpenSoundboard={() => setSoundboardOpen(true)}
             onToggleTask={toggleTask}
+            onRecordTokens={recordTokens}
           />
         )}
         {effectiveMode === "input" && (
