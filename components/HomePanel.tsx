@@ -13,6 +13,42 @@ function BoltIcon() {
     </svg>
   );
 }
+function FolderStatIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="w-4 h-4" fill="none">
+      <path
+        d="M2 4.5a1 1 0 0 1 1-1h3.2l1.2 1.4H13a1 1 0 0 1 1 1v6.1a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-7.5Z"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+function CheckStatIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="w-4 h-4" fill="none">
+      <path d="M3.5 8.5 6.5 11.5 12.5 4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+function FlameStatIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="w-4 h-4" fill="none">
+      <path
+        d="M8 1.5s3 2.6 3 5.3a3 3 0 0 1-6 0c0-.7.3-1.3.7-1.9-.2 1 .1 1.6.6 1.9-.3-1.8.6-3 1.7-4.1Zm-2.7 8.9A3.6 3.6 0 0 0 8 14.5a3.6 3.6 0 0 0 2.7-4.1c-.6.9-1.6 1.5-2.7 1.5s-2.1-.6-2.7-1.5Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+function SendMiniIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="w-4 h-4" fill="none">
+      <path d="M2 8h11.5M9 3.5 13.5 8 9 12.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
 function FolderIcon() {
   return (
@@ -93,6 +129,7 @@ interface HomePanelProps {
   onOpenSoundboard: () => void;
   onToggleTask: (projectId: string, milestoneIndex: number, taskIndex: number) => void;
   onRecordTokens: (tokens: number) => void;
+  onQuickCapture: (text: string) => void;
 }
 
 function timeOfDayGreeting(): string {
@@ -112,8 +149,17 @@ export default function HomePanel({
   onOpenSoundboard,
   onToggleTask,
   onRecordTokens,
+  onQuickCapture,
 }: HomePanelProps) {
   const firstName = user.name.trim().split(/\s+/)[0] || user.name;
+  const [captureDraft, setCaptureDraft] = useState("");
+
+  const submitCapture = () => {
+    const text = captureDraft.trim();
+    if (!text) return;
+    onQuickCapture(text);
+    setCaptureDraft("");
+  };
 
   const focusItems = useMemo<FocusItem[]>(() => {
     const items: FocusItem[] = [];
@@ -244,7 +290,7 @@ export default function HomePanel({
 
   return (
     <main className="min-h-screen px-6 sm:px-10 py-4 sm:py-5">
-      <div className="flex flex-col gap-1.5 mb-7">
+      <div className="flex flex-col gap-1.5 mb-6">
         <span className="eyebrow">Control Center</span>
         <div className="flex items-center flex-wrap gap-3">
           <h1 className="text-2xl font-bold text-ink-primary">
@@ -252,43 +298,90 @@ export default function HomePanel({
           </h1>
           {maxStreak > 0 && <StreakBadge streakCount={maxStreak} />}
         </div>
-
-        {projects.length > 0 && (
-          <div className="flex items-start gap-2 mt-1">
-            <span className="text-accent shrink-0 mt-0.5">
-              <SparkleIcon />
-            </span>
-            {focusMessageLoading ? (
-              <span className="h-4 w-64 max-w-full rounded bg-card-muted animate-pulse" />
-            ) : (
-              <p className="text-sm text-ink-secondary">{focusMessage}</p>
-            )}
-          </div>
-        )}
       </div>
 
-      {/* Quick stats */}
+      {/* AI coach line — its own tinted card so it reads as a distinct,
+          living moment rather than a caption under the greeting. */}
+      {projects.length > 0 && (
+        <div className="rounded-2xl border border-accent/25 bg-accent-soft p-4 mb-6 flex items-start gap-3">
+          <span className="shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-accent text-white">
+            <SparkleIcon />
+          </span>
+          <div className="min-w-0 flex-1 pt-1">
+            {focusMessageLoading ? (
+              <span className="block h-4 w-64 max-w-full rounded bg-card-muted animate-pulse" />
+            ) : (
+              <p className="text-sm text-ink-primary leading-relaxed">{focusMessage}</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Quick capture — jot a loose idea and it lands straight in the
+          Soundboard as a message, no project or modal to pick first. */}
+      <div className="flex items-center gap-2 mb-8">
+        <span className="shrink-0 text-ink-faint">
+          <BoltIcon />
+        </span>
+        <input
+          type="text"
+          value={captureDraft}
+          onChange={(e) => setCaptureDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") submitCapture();
+          }}
+          placeholder="Capture a quick idea…"
+          className="flex-1 min-w-0 bg-transparent border-b border-line focus:border-accent text-sm text-ink-primary placeholder:text-ink-faint focus:outline-none py-1.5 transition-colors"
+        />
+        <button
+          onClick={submitCapture}
+          disabled={!captureDraft.trim()}
+          aria-label="Send to Soundboard"
+          className="shrink-0 p-1.5 rounded-lg text-accent hover:bg-accent-soft disabled:text-ink-faint disabled:pointer-events-none transition-colors"
+        >
+          <SendMiniIcon />
+        </button>
+      </div>
+
+      {/* Quick stats — each with its own accent color instead of uniform
+          gray, so the row carries some life instead of reading as a bare
+          data table. */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-        <div className="card rounded-2xl p-4">
-          <span className="eyebrow">Active Projects</span>
-          <p className="text-2xl font-bold text-ink-primary mt-1">{projects.length}</p>
+        <div className="card rounded-2xl p-4 flex items-start gap-3">
+          <span className="shrink-0 flex items-center justify-center w-8 h-8 rounded-lg bg-accent-soft text-accent">
+            <FolderStatIcon />
+          </span>
+          <div className="min-w-0">
+            <span className="eyebrow">Active Projects</span>
+            <p className="text-2xl font-bold text-ink-primary mt-0.5">{projects.length}</p>
+          </div>
         </div>
-        <div className="card rounded-2xl p-4">
-          <span className="eyebrow">Done This Week</span>
-          <p className="text-2xl font-bold text-ink-primary mt-1">{doneThisWeekCount}</p>
+        <div className="card rounded-2xl p-4 flex items-start gap-3">
+          <span className="shrink-0 flex items-center justify-center w-8 h-8 rounded-lg bg-success-soft text-success">
+            <CheckStatIcon />
+          </span>
+          <div className="min-w-0">
+            <span className="eyebrow">Done This Week</span>
+            <p className="text-2xl font-bold text-ink-primary mt-0.5">{doneThisWeekCount}</p>
+          </div>
         </div>
-        <div className="card rounded-2xl p-4">
-          <span className="eyebrow">Best Streak</span>
-          <p className="text-2xl font-bold text-ink-primary mt-1">{maxStreak}</p>
+        <div className="card rounded-2xl p-4 flex items-start gap-3">
+          <span className="shrink-0 flex items-center justify-center w-8 h-8 rounded-lg bg-momentum-soft text-momentum">
+            <FlameStatIcon />
+          </span>
+          <div className="min-w-0">
+            <span className="eyebrow">Best Streak</span>
+            <p className="text-2xl font-bold text-ink-primary mt-0.5">{maxStreak}</p>
+          </div>
         </div>
-        <div className="card rounded-2xl p-4 flex flex-col">
-          <span className="eyebrow">Badges</span>
-          <p className="text-2xl font-bold text-ink-primary mt-1 flex items-center gap-1.5">
-            <span className="text-momentum">
-              <TrophyIcon />
-            </span>
-            {badgeCount}
-          </p>
+        <div className="card rounded-2xl p-4 flex items-start gap-3">
+          <span className="shrink-0 flex items-center justify-center w-8 h-8 rounded-lg bg-momentum-soft text-momentum">
+            <TrophyIcon />
+          </span>
+          <div className="min-w-0">
+            <span className="eyebrow">Badges</span>
+            <p className="text-2xl font-bold text-ink-primary mt-0.5">{badgeCount}</p>
+          </div>
         </div>
       </div>
 
@@ -421,7 +514,7 @@ export default function HomePanel({
               <button
                 key={project.id}
                 onClick={() => onSelectProject(project.id)}
-                className="card rounded-2xl p-4 flex flex-col gap-3 text-left hover:border-accent/50 transition-colors"
+                className="card rounded-2xl p-4 flex flex-col gap-3 text-left hover:border-accent/50 hover:shadow-md transition-all"
               >
                 <div className="flex items-center gap-2.5">
                   <span className="shrink-0 flex items-center justify-center w-8 h-8 rounded-lg bg-card-muted text-base">

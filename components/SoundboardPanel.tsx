@@ -48,6 +48,10 @@ interface SoundboardPanelProps {
   usage: TokenUsage;
   onRecordTokens: (tokens: number) => void;
   onUpgrade: () => void;
+  /** Set when the panel is opened from the Home quick-capture field — sent
+      automatically on open, then the parent clears it (consume-once). */
+  initialMessage?: string | null;
+  onConsumeInitialMessage?: () => void;
 }
 
 // Web Speech API isn't in TS's DOM lib — narrow shape for what we actually use.
@@ -62,7 +66,16 @@ interface SpeechRecognitionLike extends EventTarget {
   onerror: (() => void) | null;
 }
 
-export default function SoundboardPanel({ open, onClose, tier, usage, onRecordTokens, onUpgrade }: SoundboardPanelProps) {
+export default function SoundboardPanel({
+  open,
+  onClose,
+  tier,
+  usage,
+  onRecordTokens,
+  onUpgrade,
+  initialMessage,
+  onConsumeInitialMessage,
+}: SoundboardPanelProps) {
   const [messages, setMessages] = useState<SoundboardMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
@@ -118,8 +131,7 @@ export default function SoundboardPanel({ open, onClose, tier, usage, onRecordTo
     recognition.start();
   };
 
-  const handleSend = async () => {
-    const content = draft.trim();
+  const sendMessage = async (content: string) => {
     if (!content || sending || limitReached) return;
 
     const userMessage: SoundboardMessage = { role: "user", content };
@@ -150,6 +162,18 @@ export default function SoundboardPanel({ open, onClose, tier, usage, onRecordTo
       setSending(false);
     }
   };
+
+  const handleSend = () => sendMessage(draft.trim());
+
+  // Quick-capture from Home: an initial message means "send this now" —
+  // consumed once so re-opening the panel later doesn't resend it.
+  useEffect(() => {
+    if (open && initialMessage && initialMessage.trim()) {
+      sendMessage(initialMessage.trim());
+      onConsumeInitialMessage?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, initialMessage]);
 
   return (
     <>

@@ -108,6 +108,7 @@ export default function AppShell() {
   const [settingsTab, setSettingsTab] = useState<SettingsTab>("general");
   const [chatOpen, setChatOpen] = useState(false);
   const [soundboardOpen, setSoundboardOpen] = useState(false);
+  const [soundboardPrefill, setSoundboardPrefill] = useState<string | null>(null);
   const [upsellOpen, setUpsellOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [highlightMilestoneId, setHighlightMilestoneId] = useState<string | null>(null);
@@ -462,6 +463,8 @@ export default function AppShell() {
           setSoundboardOpen(false);
           openSettings("plan");
         }}
+        initialMessage={soundboardPrefill}
+        onConsumeInitialMessage={() => setSoundboardPrefill(null)}
       />
 
       <UpsellModal
@@ -508,6 +511,10 @@ export default function AppShell() {
             onOpenSoundboard={() => setSoundboardOpen(true)}
             onToggleTask={toggleTask}
             onRecordTokens={recordTokens}
+            onQuickCapture={(text) => {
+              setSoundboardPrefill(text);
+              setSoundboardOpen(true);
+            }}
           />
         )}
         {effectiveMode === "input" && (
