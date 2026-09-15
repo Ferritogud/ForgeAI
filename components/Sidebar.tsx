@@ -101,6 +101,19 @@ function CalendarWeekIcon() {
     </svg>
   );
 }
+function HomeIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="w-4 h-4" fill="none">
+      <path
+        d="M2 7.5 8 2l6 5.5M3.5 6.5V13a.7.7 0 0 0 .7.7h2.3v-3.4a1.5 1.5 0 0 1 3 0v3.4h2.3a.7.7 0 0 0 .7-.7V6.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 function SoundboardIcon() {
   return (
     <svg viewBox="0 0 16 16" className="w-4 h-4" fill="none">
@@ -128,6 +141,8 @@ interface SidebarProps {
   onOpenBadges: () => void;
   onOpenDigest: () => void;
   onOpenSoundboard: () => void;
+  onGoHome: () => void;
+  isHome: boolean;
   user: MockUser;
   tier: Tier;
   earnedBadges: EarnedBadge[];
@@ -154,6 +169,8 @@ export default function Sidebar({
   onOpenBadges,
   onOpenDigest,
   onOpenSoundboard,
+  onGoHome,
+  isHome,
   user,
   tier,
   earnedBadges,
@@ -272,12 +289,15 @@ export default function Sidebar({
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between px-4 pt-5 pb-3 shrink-0">
-            <div className={`flex items-center gap-2 overflow-hidden ${collapsed ? "md:hidden" : ""}`}>
+            <button
+              onClick={onGoHome}
+              className={`flex items-center gap-2 overflow-hidden rounded-lg -ml-1 px-1 py-0.5 hover:bg-accent-soft transition-colors ${collapsed ? "md:hidden" : ""}`}
+            >
               <span className="inline-flex h-2 w-2 rounded-full bg-accent shrink-0" />
               <span className="text-sm font-semibold text-ink-primary whitespace-nowrap">
                 Forge<span className="text-accent">AI</span>
               </span>
-            </div>
+            </button>
             <button
               onClick={onCloseMobile}
               className="md:hidden p-1.5 rounded-lg text-ink-secondary hover:text-accent"
@@ -291,6 +311,21 @@ export default function Sidebar({
               aria-label="Toggle sidebar"
             >
               <ChevronIcon open={!collapsed} />
+            </button>
+          </div>
+
+          {/* Home — the daily-landing control center, aggregating across every
+              project instead of dropping straight into whichever one was
+              last active. */}
+          <div className="px-3 pt-1 pb-2 shrink-0">
+            <button
+              onClick={onGoHome}
+              className={`w-full flex items-center gap-2.5 rounded-xl text-sm font-medium transition-colors duration-200
+                ${isHome ? "bg-accent-soft text-accent" : "text-ink-secondary hover:bg-card-muted hover:text-ink-primary"}
+                ${collapsed ? "md:justify-center md:px-0" : "px-3.5"} py-2`}
+            >
+              <HomeIcon />
+              <span className={collapsed ? "md:hidden" : ""}>Home</span>
             </button>
           </div>
 
@@ -363,7 +398,7 @@ export default function Sidebar({
               </p>
             )}
             {projects.map((project) => {
-              const active = project.id === activeProjectId;
+              const active = !isHome && project.id === activeProjectId;
               const percent = projectPercent(project);
               const isRenaming = renamingId === project.id;
               const isMenuOpen = menuProjectId === project.id;

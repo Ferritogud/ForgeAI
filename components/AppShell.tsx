@@ -15,6 +15,7 @@ import { isTokenLimitReached } from "@/lib/tiers";
 import { PROJECT_TEMPLATES } from "@/lib/templates";
 import { EMPTY_GOAL_CONTEXT, GoalContext } from "@/lib/goalContext";
 import Sidebar from "./Sidebar";
+import HomePanel from "./HomePanel";
 import SignInScreen from "./SignInScreen";
 import LandingPage from "./LandingPage";
 import InputScreen from "./InputScreen";
@@ -33,7 +34,7 @@ import BadgesModal from "./BadgesModal";
 import DigestModal from "./DigestModal";
 import BadgeToast from "./BadgeToast";
 
-type Mode = "input" | "questions" | "confirm" | "generating" | "dashboard";
+type Mode = "input" | "questions" | "confirm" | "generating" | "dashboard" | "home";
 type SettingsTab = "general" | "plan" | "trash";
 
 function MenuIcon() {
@@ -95,7 +96,7 @@ export default function AppShell() {
   const badges = useBadges();
 
   const [showSignIn, setShowSignIn] = useState(false);
-  const [mode, setMode] = useState<Mode>("dashboard");
+  const [mode, setMode] = useState<Mode>("home");
   const [pendingGoal, setPendingGoal] = useState("");
   const [pendingDeadline, setPendingDeadline] = useState<string | undefined>(undefined);
   const [pendingContext, setPendingContext] = useState<GoalContext>(EMPTY_GOAL_CONTEXT);
@@ -243,6 +244,11 @@ export default function AppShell() {
     setMobileOpen(false);
   };
 
+  const handleGoHome = () => {
+    setMode("home");
+    setMobileOpen(false);
+  };
+
   // Entry point from the main input screen: instead of generating right
   // away, transition to the clarifying-questions step. The budget check
   // happens here (not after questions) so a maxed-out account doesn't waste
@@ -353,7 +359,7 @@ export default function AppShell() {
     );
   }
 
-  const highlightedId = effectiveMode === "input" ? null : activeProjectId;
+  const highlightedId = effectiveMode === "input" || effectiveMode === "home" ? null : activeProjectId;
   const sidebarOffset = collapsed ? "md:ml-[76px]" : "md:ml-[var(--sidebar-w)]";
 
   return (
@@ -378,6 +384,8 @@ export default function AppShell() {
         onOpenBadges={() => setBadgesOpen(true)}
         onOpenDigest={() => setDigestOpen(true)}
         onOpenSoundboard={() => setSoundboardOpen(true)}
+        onGoHome={handleGoHome}
+        isHome={effectiveMode === "home"}
         user={auth.user}
         tier={tier}
         earnedBadges={badges.earned}
@@ -489,6 +497,18 @@ export default function AppShell() {
           <span className="w-9" />
         </div>
 
+        {effectiveMode === "home" && (
+          <HomePanel
+            user={auth.user}
+            projects={projects}
+            tier={tier}
+            badgeCount={badges.earned.length}
+            onSelectProject={handleSelectProject}
+            onNewProject={handleNewProject}
+            onOpenSoundboard={() => setSoundboardOpen(true)}
+            onToggleTask={toggleTask}
+          />
+        )}
         {effectiveMode === "input" && (
           <InputScreen onSubmit={handleStartGeneration} onSelectTemplate={handleSelectTemplate} error={generationError} />
         )}
